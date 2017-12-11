@@ -12,4 +12,5 @@
 
 <style>
   /* CSS */
+    @import '../../node_modules/materialize-css/dist/css/materialize.css';
 </style>
