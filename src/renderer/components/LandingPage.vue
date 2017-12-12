@@ -1,19 +1,22 @@
 <template>
-
+    <browser></browser>
 </template>
 
 <script>
+    import Browser from './Browser/Browser'
 
-
-  export default {
-    name: 'landing-page',
-    components: {  },
-    methods: {
-
+    export default {
+        name: 'landing-page',
+        components: {Browser},
+        methods: {}
     }
-  }
 </script>
 
 <style>
-
+    * {
+        box-sizing: border-box
+    }
+    body {
+        background: white;
+    }
 </style>
