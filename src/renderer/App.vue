@@ -1,5 +1,5 @@
 <template>
-    <div id="app">
+    <div id="app" class="app">
         <router-view></router-view>
     </div>
 </template>
@@ -14,4 +14,19 @@
     /* CSS */
     @import '../../node_modules/materialize-css/dist/css/materialize.css';
     @import "https://fonts.googleapis.com/icon?family=Material+Icons";
+    * {
+        box-sizing: border-box
+    }
+    html,
+    body {
+        height: 100%;
+        background: white;
+    }
+    .app {
+        height: 100%;
+    }
+    .max-height {
+        height: 100%;
+    }
+
 </style>
