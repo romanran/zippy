@@ -150,7 +150,7 @@
     }
 </script>
 
-<style scoped>
+<style scoped lang="less">
     .btn-flat {
         text-transform: none;
     }
@@ -175,10 +175,12 @@
     .loading {
         opacity: 0;
     }
+    @accent: teal;
     a:hover {
-         color: teal;
+         color: @accent;
         text-decoration: underline;
     }
+
     .center-align {
         width: 100%;
     }
