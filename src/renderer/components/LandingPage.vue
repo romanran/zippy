@@ -13,10 +13,5 @@
 </script>
 
 <style>
-    * {
-        box-sizing: border-box
-    }
-    body {
-        background: white;
-    }
+
 </style>

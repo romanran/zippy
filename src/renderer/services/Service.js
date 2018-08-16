@@ -1,9 +1,16 @@
-const path = require('path')
+import path from 'path'
+import extract from 'extract-zip'
+import fs from 'fs-extra'
 
-export const getDirPattern = (curr_dir) => {
-    let pattern = '*(!(*.*)'
-    'rar, zip'.split(', ').forEach(ext => pattern = pattern + `|*.${ext}`)
-    return pattern + ')'
+export const getDirPattern = (inside_archive) => {
+    let pattern = '*'
+    // deb('!inside', !inside_archive)
+    if (!inside_archive) {
+        pattern = '*(!(*.*)';
+        'rar, zip'.split(', ').forEach(ext => pattern = pattern + `|*.${ext}`)
+        pattern = pattern + ')'
+    }
+    return pattern
 }
 
 export const getWinDrives = () => {
@@ -32,5 +39,27 @@ export const getWinDrives = () => {
         });
         list.stdin.write('wmic logicaldisk get caption\n');
         list.stdin.end();
+    })
+}
+
+const extractArchive = (source_path, target_dir) => {
+    return new Promise((resolve, reject) => {
+        switch (path.parse(source_path).ext) {
+            case '.zip':
+                extract(source_path, {dir: target_dir}, function (err) {
+                    if (err) console.warn(err)
+                    resolve(target_dir)
+                })
+                break
+        }
+    })
+}
+
+export const openFile = (file_path) => {
+    const file_path_parsed = path.parse(file_path)
+    const target_path = path.resolve(process.env.TMP, file_path_parsed.name)
+    return new Promise((resolve, reject) => {
+        extractArchive(file_path, target_path)
+            .then(() => resolve(target_path))
     })
 }
