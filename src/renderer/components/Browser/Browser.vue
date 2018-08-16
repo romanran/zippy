@@ -5,21 +5,22 @@
                 <ul>
                     <li v-for="drive in drives" v-bind:class="{loading: loading}">
                         <a
-                                @click="readDir(drive)"
-                                class="truncate btn-flat waves-effect waves-teal"
+                            @click="readDir(drive)"
+                            class="truncate btn-flat waves-effect waves-teal"
                         ><i class="material-icons left">desktop_windows</i>{{drive}}</a>
                     </li>
                 </ul>
             </aside>
             <main class="browser__main" v-bind:class="{loading: loading}">
                 <div class="section">
-                    <a class="btn-flat waves-effect waves-teal" @click="readDir(prev_dir)"><i class="material-icons left">history</i><span>Previous</span></a>
+                    <a class="btn-flat waves-effect waves-teal" @click="readDir(prev_dir)"><i
+                            class="material-icons left">history</i><span>Previous</span></a>
                     <div class="divider"></div>
                     <ul>
                         <li v-for="file in files">
                             <a
-                                    @click="readDir(file)"
-                                    class="truncate btn-flat waves-effect waves-teal"
+                                @click="readDir(file)"
+                                class="truncate btn-flat waves-effect waves-teal"
                             ><i class="material-icons left" v-text="getType(file)"></i>{{file}}</a>
                         </li>
                     </ul>
@@ -31,11 +32,13 @@
                 <div class="spinner-layer spinner-blue-only">
                     <div class="circle-clipper left">
                         <div class="circle"></div>
-                    </div><div class="gap-patch">
-                    <div class="circle"></div>
-                </div><div class="circle-clipper right">
-                    <div class="circle"></div>
-                </div>
+                    </div>
+                    <div class="gap-patch">
+                        <div class="circle"></div>
+                    </div>
+                    <div class="circle-clipper right">
+                        <div class="circle"></div>
+                    </div>
                 </div>
             </div>
             <p class="flow-text">Opening the archive...</p>
@@ -84,9 +87,12 @@
                 try {
                     const stat = fs.statSync(target_dir)
                     if (stat.isFile()) {
-                        this.loading = 1;
+                        this.loading = 1
                         openFile(target_dir)
-                            .then(dir => this.readDir(dir, path.parse(dir).name))
+                            .then(dir => {
+                                this.loading = 0
+                                this.readDir(dir, path.parse(dir).name)
+                            })
                         return false;
                     }
                 } catch (err) {
@@ -150,49 +156,56 @@
     }
 </script>
 
-<style scoped lang="less">
+<style lang="less">
     .btn-flat {
         text-transform: none;
     }
+
     .browser {
         font-size: 0;
     }
+
     .browser__drivelist {
         display: inline-block;
         vertical-align: top;
         width: 150px;
-        padding-top: 20px;
+        /*padding-top: 20px;*/
         opacity: 1;
         transition: opacity 250ms ease;
     }
+
     .browser__main {
         display: inline-block;
         vertical-align: top;
-        width: calc(100% - 150px);
+        /*width: calc(100% - 150px);*/
         opacity: 1;
         transition: opacity 250ms ease;
+        &.loading {
+            opacity: 0
+        }
     }
-    .loading {
+
+    .loader-wrap {
         opacity: 0;
+        position: fixed;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        &.loading {
+            opacity: 1
+        }
     }
+
     @accent: teal;
-    a:hover {
-         color: @accent;
-        text-decoration: underline;
+    a {
+        &:hover {
+            color: @accent;
+            text-decoration: underline;
+        }
     }
 
     .center-align {
         width: 100%;
     }
-    .loader-wrap {
-        transition: opacity 250ms ease;
-        opacity: 0;
-        position: fixed;
-        left: 50%;
-        transform: translateX(-50%);
-    }
-    .loader-wrap.loading {
-        opacity: 1
-    }
-    /* CSS */
+
 </style>
