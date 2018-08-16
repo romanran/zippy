@@ -50,12 +50,19 @@ let rendererConfig = {
                 test: /\.(css|less)$/,
                 use: extractLess.extract({
                     use: [{
-                        loader: "css-loader",
+                        loader: 'css-loader',
                         options: {
-                            sourceMap: true
+                            sourceMap: true,
+                            importLoaders: 1
                         }
                     }, {
-                        loader: "less-loader",
+                        loader: 'postcss-loader',
+                        options: {
+                            sourceMap: true,
+                            importLoaders: 1
+                        }
+                    },{
+                        loader: 'less-loader',
                         options: {
                             sourceMap: true,
                             strictMath: true,
@@ -64,7 +71,7 @@ let rendererConfig = {
                         }
                     }],
                     // use style-loader in development
-                    fallback: "style-loader"
+                    fallback: 'style-loader'
                 })
             },
             {
@@ -87,7 +94,26 @@ let rendererConfig = {
                     options: {
                         extractCSS: process.env.NODE_ENV === 'production',
                         loaders: {
-                            less: 'vue-style-loader!css-loader!less-loader',
+                            css: extractLess.extract({
+                                use: [{
+                                    loader: 'css-loader',
+                                    options: {
+                                        sourceMap: true,
+                                        importLoaders: 1
+                                    }
+                                },{
+                                    loader: 'less-loader',
+                                    options: {
+                                        sourceMap: true,
+                                        strictMath: true,
+                                        noIeCompat: true,
+                                        strictUnits: false,
+                                        importLoaders: 1
+                                    }
+                                }],
+                                // use style-loader in development
+                                fallback: 'style-loader'
+                            })
                         }
                     }
                 }
@@ -153,7 +179,7 @@ let rendererConfig = {
             '@': path.join(__dirname, '../src/renderer'),
             'vue$': 'vue/dist/vue.esm.js'
         },
-        extensions: ['.js', '.vue', '.json', '.css', '.node']
+        extensions: ['.js', '.vue', '.json', '.css', '.node', '.less']
     },
     target: 'electron-renderer'
 }
