@@ -77,7 +77,13 @@ export const openFile = (file_path) => {
     const file_path_parsed = path.parse(file_path)
     const target_path = path.resolve(process.env.TMP, file_path_parsed.name)
     return new Promise((resolve, reject) => {
-        extractArchive(file_path, target_path)
-            .then(() => resolve(target_path))
+        fs.pathExists(target_path)
+            .then(exists => {
+                if (exists) {
+                    return resolve(target_path)
+                }
+                extractArchive(file_path, target_path)
+                    .then(() => resolve(target_path))
+            })
     })
 }

@@ -3,7 +3,7 @@
         <div class="browser">
             <aside class="browser__drivelist">
                 <ul>
-                    <li v-for="drive in drives" v-bind:class="{loading: loading}">
+                    <li v-for="drive in drives" v-bind:class="{loading: loading}"  v-bind:key="drive">
                         <a
                             @click="readDir(drive)"
                             class="truncate btn-flat waves-effect waves-teal"
@@ -17,12 +17,8 @@
                             class="material-icons left">history</i><span>Previous</span></a>
                     <div class="divider"></div>
                     <ul>
-                        <li v-for="file in files">
-                            <a
-                                @click="readDir(file)"
-                                class="truncate btn-flat waves-effect waves-teal"
-                            ><i class="material-icons left" v-text="getType(file)"></i>{{file}}</a>
-                        </li>
+                        <file v-for="file in files" v-bind:key="file" v-bind:name="file" @click="readDir(drive)">
+                        </file>
                     </ul>
                 </div>
             </main>
@@ -53,9 +49,11 @@
     import path from 'path'
     import _ from 'lodash'
     import {getDirPattern, getWinDrives, openFile} from '@/services/Service'
+    import File from './File/File'
 
     export default {
         name: 'Browser',
+        components: {File},
         data: () => {
             return {
                 prev_dir: process.env.HOMEPATH,
@@ -80,7 +78,7 @@
                     if (target_dir.search(this.inside_archive) < 0) {
                         this.inside_archive = 0
                         target_dir = this.archive_location
-                        this.curr_dir = target_dir + '/' + this.inside_archive //refactor this part
+                        this.curr_dir = path.resolve(target_dir, this.inside_archive) //refactor this part
                     }
                 }
 
@@ -110,6 +108,7 @@
                         if (err) return this.showError(err)
                         this.prev_dir = this.curr_dir
                         this.curr_dir = path.resolve(this.curr_dir, dir)
+                        this.$store.commit('setCWD', this.curr_dir)
                         this.files = files
                         this.loading = 0
                     })
@@ -117,18 +116,6 @@
             },
             showError(err) {
                 console.warn(err)
-            },
-            getType(file) {
-                if (file === '../') {
-                    return ''
-                }
-                try {
-                    file = fs.statSync(path.resolve(this.curr_dir, file))
-                } catch (err) {
-                    console.log(err)
-                    return 'lock'
-                }
-                return file.isDirectory() ? 'folder' : 'storage';
             },
             sort(type) {
                 switch (type) {
@@ -157,9 +144,6 @@
 </script>
 
 <style lang="less">
-    .btn-flat {
-        text-transform: none;
-    }
 
     .browser {
         font-size: 0;
@@ -177,7 +161,7 @@
     .browser__main {
         display: inline-block;
         vertical-align: top;
-        /*width: calc(100% - 150px);*/
+        width: calc(~"100% - 150px");
         opacity: 1;
         transition: opacity 250ms ease;
         &.loading {
@@ -195,17 +179,7 @@
             opacity: 1
         }
     }
-
-    @accent: teal;
-    a {
-        &:hover {
-            color: @accent;
-            text-decoration: underline;
-        }
-    }
-
     .center-align {
         width: 100%;
     }
-
 </style>
