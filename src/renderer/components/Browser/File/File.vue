@@ -1,11 +1,9 @@
 <template>
-    <li
-        class="truncate btn-flat waves-effect waves-teal file"
-    >
-    <i class="material-icons left" v-text="type" v-if="type"></i>
-    <span class="file__name">{{name}}</span>
-    <span class="file__size">{{displayStats.size}}</span>
-    <span class="file__modified">{{displayStats.time}}</span>
+    <li class="truncate file" v-if="!hide" @click="$emit('readDir')">
+        <div class="file__col icon"><i class="material-icons left" v-text="type" v-if="type"></i></div>
+        <div class="file__col name"><span>{{name}}</span></div>
+        <div class="file__col size"><span>{{displayStats.size}}</span></div>
+        <div class="file__col time"><span>{{displayStats.time}}</span></div>
     </li>
 </template>
 <script>
@@ -23,7 +21,8 @@
             return {
                 type: 'loading',
                 stats: Object,
-                displayStats: Object
+                displayStats: Object,
+                hide: false
             }
         },
         methods: {
@@ -40,10 +39,14 @@
                     .catch(err => {
                         console.log(err)
                         this.type = 'lock'
+                        this.hide = true
                     })
             },
             assignStats(stats) {
                 this.stats = stats
+                if (stats.mode === 16822) {
+                    this.hide = true
+                }
                 this.displayStats = {
                     size: stats.size ? prettyBytes(stats.size) : '',
                     time: moment(stats.mtime).format('YYYY/MM/DD HH:mm')
@@ -58,19 +61,43 @@
 </script>
 
 <style lang="less">
-    .file {
-        width: 100%;
-    }
     .btn-flat {
         text-transform: none;
     }
     @accent: teal;
-    a {
+    .file {
+        color: #444;
+        font-size: 13px;
+        cursor: pointer;
+        letter-spacing: 0.5px;
+        font-family: Roboto;
+        transition :all 200ms ease;
+        display: table-row;
+        &:nth-child(2n + 1) {
+            background: fade(teal, 5%)
+        }
         &:hover {
             color: @accent;
             text-decoration: underline;
         }
     }
 
+    .file__col {
+        &:first-child {
+            padding-left: 20px;
+        }
+        &:last-child {
+            padding-right: 20px;
+        }
+        display: table-cell;
+        padding: 10px 5px;
+        vertical-align: middle;
+    }
+    .time {
+        width: 125px;
+    }
+    .icon {
+        width: 10px;
+    }
 
 </style>

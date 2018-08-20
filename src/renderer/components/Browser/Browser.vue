@@ -3,27 +3,43 @@
         <div class="browser">
             <aside class="browser__drivelist">
                 <ul>
-                    <li v-for="drive in drives" v-bind:class="{loading: loading}"  v-bind:key="drive">
+                    <li v-for="drive in drives" :class="{loading: loading}" :key="drive">
                         <a
                             @click="readDir(drive)"
-                            class="truncate btn-flat waves-effect waves-teal"
+                            class="truncate btn-flat waves-effect waves-teal browser__drive"
                         ><i class="material-icons left">desktop_windows</i>{{drive}}</a>
                     </li>
                 </ul>
             </aside>
-            <main class="browser__main" v-bind:class="{loading: loading}">
+            <main class="browser__main" :class="{loading: loading}">
                 <div class="section">
                     <a class="btn-flat waves-effect waves-teal" @click="readDir(prev_dir)"><i
                             class="material-icons left">history</i><span>Previous</span></a>
                     <div class="divider"></div>
-                    <ul>
-                        <file v-for="file in files" v-bind:key="file" v-bind:name="file" @click="readDir(drive)">
-                        </file>
-                    </ul>
+                    <div class="sort-bar">
+                        <div class="sort-row">
+                            <div
+                                class="btn-flat waves-effect waves-teal sort"
+                                v-for="type in sort_types" 
+                                :key="type"
+                                @click="sort(type)">{{type}}</div>
+                        </div>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="files-wrap">
+                        <ul class="files">
+                            <file 
+                                v-for="file in files" 
+                                :key="file" 
+                                :name="file" 
+                                @readDir="readDir(file)">
+                            </file>
+                        </ul>
+                    </div>
                 </div>
             </main>
         </div>
-        <div class="loader-wrap center-align" v-bind:class="{loading: loading}">
+        <div class="loader-wrap center-align" :class="{loading: loading}">
             <div class="preloader-wrapper big active">
                 <div class="spinner-layer spinner-blue-only">
                     <div class="circle-clipper left">
@@ -58,15 +74,17 @@
             return {
                 prev_dir: process.env.HOMEPATH,
                 curr_dir: process.env.HOMEPATH,
-                files: null,
-                drives: null,
+                files: Array,
+                drives: Array,
                 loading: 0,
                 inside_archive: 0,
-                archive_location: null
+                archive_location: String,
+                sort_types: ['name', 'size', 'time']
             }
         },
         methods: {
             readDir: function (dir, inside_archive) {
+                console.log(dir, 'haaa');
                 let target_dir = path.resolve(this.curr_dir, dir)
                 const curr_dir_parsed = path.parse(this.curr_dir);
 
@@ -83,15 +101,17 @@
                 }
 
                 try {
+                    this.loading = 1
                     const stat = fs.statSync(target_dir)
                     if (stat.isFile()) {
-                        this.loading = 1
                         openFile(target_dir)
                             .then(dir => {
                                 this.loading = 0
                                 this.readDir(dir, path.parse(dir).name)
                             })
                         return false;
+                    } else {
+                        this.loading = 0
                     }
                 } catch (err) {
 //                        console.warn(err)
@@ -120,13 +140,13 @@
             sort(type) {
                 switch (type) {
                     case 'name':
-                        this.files = _.sortBy(this.files, file)
+                        this.files = _.sortBy(this.files, file => {})
                         break;
-                    case 'type':
-                        this.files = _.sortBy(this.files, file)
+                    case 'size':
+                        this.files = _.sortBy(this.files, file => {})
                         break;
                     case 'time':
-                        this.files = _.sortBy(this.files, file)
+                        this.files = _.sortBy(this.files, file => {})
                         break;
                 }
             }
@@ -153,9 +173,16 @@
         display: inline-block;
         vertical-align: top;
         width: 150px;
-        /*padding-top: 20px;*/
+        padding-top: 20px;
         opacity: 1;
         transition: opacity 250ms ease;
+    }
+
+    .browser__drive {
+        width: 100%;
+        &:hover {
+            background: fade(black, 5%)
+        }
     }
 
     .browser__main {
@@ -175,11 +202,55 @@
         left: 50%;
         top: 50%;
         transform: translate(-50%, -50%);
+        z-index: -1;
         &.loading {
+            z-index: 1;
             opacity: 1
         }
     }
     .center-align {
         width: 100%;
     }
+    
+    .files-wrap {
+        max-height: calc(~"100vh - 104px");
+        overflow: auto;
+    }
+
+    .files {
+        display: table;
+        width: 100%;
+    }
+
+    .sort-bar {
+        display: table;
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .sort-row {
+        display: table-row;
+    }
+    .sort {
+        display: table-cell;
+    }
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+    background: #f1f1f1; 
+    }
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background: #888; 
+    transition: background 200ms ease;
+    border-radius: 10px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+    background: rgb(110, 160, 160); 
+}
 </style>
