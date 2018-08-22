@@ -5,7 +5,7 @@ import _7zip from '7zip'
 
 const _7z = _7zip['7z']
 
-export const getDirPattern = (inside_archive) => {
+export function getDirPattern(inside_archive) {
     let pattern = '*'
     // deb('!inside', !inside_archive)
     if (!inside_archive) {
@@ -16,7 +16,7 @@ export const getDirPattern = (inside_archive) => {
     return pattern
 }
 
-export const getWinDrives = () => {
+export function getWinDrives() {
     return new Promise((resolve, reject) => {
         let stdout = '';
         const spawn = require('child_process').spawn,
@@ -45,7 +45,7 @@ export const getWinDrives = () => {
     })
 }
 
-const extractArchive = (source_path, target_dir) => {
+export function extractArchive(source_path, target_dir) {
     return new Promise((resolve, reject) => {
         switch (path.parse(source_path).ext) {
             case '.zip':
@@ -73,7 +73,7 @@ const extractArchive = (source_path, target_dir) => {
     })
 }
 
-export const openFile = (file_path) => {
+export function openFile(file_path) {
     const file_path_parsed = path.parse(file_path)
     const target_path = path.resolve(process.env.TMP, file_path_parsed.name)
     return new Promise((resolve, reject) => {

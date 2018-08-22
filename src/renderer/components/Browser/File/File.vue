@@ -1,61 +1,26 @@
 <template>
-    <li class="truncate file" v-if="!hide" @click="$emit('readDir')">
-        <div class="file__col icon"><i class="material-icons left" v-text="type" v-if="type"></i></div>
-        <div class="file__col name"><span>{{name}}</span></div>
-        <div class="file__col size"><span>{{displayStats.size}}</span></div>
-        <div class="file__col time"><span>{{displayStats.time}}</span></div>
+    <li class="truncate file" v-if="!file.hidden" @click="$emit('click')">
+        <div class="file__col icon"><i class="material-icons left" v-text="file.type" v-if="file.type"></i></div>
+        <div class="file__col name" v-if="file.display"><span>{{file.name}}</span></div>
+        <div class="file__col size" v-if="file.display"><span>{{file.display.size}}</span></div>
+        <div class="file__col time" v-if="file.display"><span>{{file.display.time}}</span></div>
     </li>
 </template>
 <script>
-    import fs from 'fs-extra'
-    import path from 'path'
-    import _ from 'lodash'
-    import prettyBytes from 'pretty-bytes'
-    import moment from 'moment'
     export default {
         name: 'Browser',
         props: {
-            name: String
+            file: Object
         },
         data: () => {
             return {
-                type: 'loading',
-                stats: Object,
-                displayStats: Object,
-                hide: false
             }
         },
         methods: {
-            getStats(file) {
-                if (file === '../') {
-                    return this.type = ''
-                }
-                fs.stat(path.resolve(this.$store.state.Browser.curr_dir, file))
-                    .then(data => {
-                        console.log(data)
-                        this.type =  data.isDirectory() ? 'folder' : 'storage'
-                        this.assignStats(data) 
-                    })
-                    .catch(err => {
-                        console.log(err)
-                        this.type = 'lock'
-                        this.hide = true
-                    })
-            },
-            assignStats(stats) {
-                this.stats = stats
-                if (stats.mode === 16822) {
-                    this.hide = true
-                }
-                this.displayStats = {
-                    size: stats.size ? prettyBytes(stats.size) : '',
-                    time: moment(stats.mtime).format('YYYY/MM/DD HH:mm')
-                }
-            }
+
         },
         created() {
-            console.log(this.name, this.$store.state.Browser.curr_dir);
-            this.getStats(this.name)
+            deb('created', this.file)
         }
     }
 </script>

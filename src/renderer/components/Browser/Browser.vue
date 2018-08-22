@@ -30,9 +30,9 @@
                         <ul class="files">
                             <file 
                                 v-for="file in files" 
-                                :key="file" 
-                                :name="file" 
-                                @readDir="readDir(file)">
+                                :key="file.name" 
+                                :file="file" 
+                                @click="readDir(file)">
                             </file>
                         </ul>
                     </div>
@@ -54,6 +54,7 @@
                 </div>
             </div>
             <p class="flow-text">Opening the archive...</p>
+            <!-- TODO: progress bar -->
         </div>
     </div>
 </template>
@@ -65,6 +66,7 @@
     import path from 'path'
     import _ from 'lodash'
     import {getDirPattern, getWinDrives, openFile} from '@/services/Service'
+    import {getFileStats} from '@/services/File'
     import File from './File/File'
 
     export default {
@@ -83,8 +85,7 @@
             }
         },
         methods: {
-            readDir: function (dir, inside_archive) {
-                console.log(dir, 'haaa');
+            readDir: async function(dir, inside_archive) {
                 let target_dir = path.resolve(this.curr_dir, dir)
                 const curr_dir_parsed = path.parse(this.curr_dir);
 
@@ -121,14 +122,21 @@
                     this.files = this.drives
                     this.prev_dir = this.curr_dir
                     this.curr_dir = '/';
+                    this.$store.commit('setCWD', this.curr_dir)
                 } else {
                     deb(this.curr_dir, dir, target_dir, path.resolve(this.curr_dir, dir))
-                    glob(getDirPattern(this.inside_archive), {cwd: target_dir}, (err, files) => {
-                        files = _.concat('../', files)
+                    this.prev_dir = this.curr_dir
+                    this.curr_dir = path.resolve(this.curr_dir, dir)
+                    this.$store.commit('setCWD', this.curr_dir)
+
+                    glob(getDirPattern(this.inside_archive), {cwd: target_dir}, async (err, files) => {
+                        files =  await Promise.all(_.map(files, async file => await getFileStats(file, this.$store.state.Browser.curr_dir)))
+                        files = _.concat({
+                            name: '../',
+                            hidden: false
+                        }, files)
+                        deb('files:', files)
                         if (err) return this.showError(err)
-                        this.prev_dir = this.curr_dir
-                        this.curr_dir = path.resolve(this.curr_dir, dir)
-                        this.$store.commit('setCWD', this.curr_dir)
                         this.files = files
                         this.loading = 0
                     })
@@ -140,14 +148,15 @@
             sort(type) {
                 switch (type) {
                     case 'name':
-                        this.files = _.sortBy(this.files, file => {})
+                        this.files = []
                         break;
-                    case 'size':
-                        this.files = _.sortBy(this.files, file => {})
-                        break;
-                    case 'time':
-                        this.files = _.sortBy(this.files, file => {})
-                        break;
+                    // case 'size':
+                    //     const sort = _.sortBy(this.files, )
+                    //     break;
+                    // case 'time':
+                    //     const sort = _.sortBy(this.files, file => {})
+                    //     this.files = 
+                    //     break;
                 }
             }
         },
