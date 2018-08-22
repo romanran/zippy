@@ -10,15 +10,13 @@ export async function getFileStats(file, curr_dir) {
             type: ''
         }
     }
-    deb(file, curr_dir)
     return fs.stat(path.resolve(curr_dir, file))
         .then(data => {
-            deb(data)
             return {
                 type: data.isDirectory() ? 'folder' : 'storage',
                 name: file,
                 data: data,
-                hidden: data.mode === 16822,
+                hidden: 0,
                 display: getDisplayStats(data)
             }
         })

@@ -59,14 +59,13 @@ export function extractArchive(source_path, target_dir) {
                 const seven_zip = spawn(_7z, ['x', source_path, '-y', '-o' + target_dir])
                 seven_zip.on('close', function (code) {
                     resolve(target_dir)
-                    deb('sad')
-                });
+                })
                 seven_zip.stdout.on('data', function (data) {
                     deb(data)
-                });
+                })
                 seven_zip.stderr.on('data', function (data) {
                     console.log('stderr: ' + data);
-                });
+                })
         
                 break;
         }

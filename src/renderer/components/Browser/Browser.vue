@@ -20,9 +20,9 @@
                         <div class="sort-row">
                             <div
                                 class="btn-flat waves-effect waves-teal sort"
-                                v-for="type in sort_types" 
+                                v-for="(val, type) in sort" 
                                 :key="type"
-                                @click="sort(type)">{{type}}</div>
+                                @click="sortFiles(type)">{{type}}</div>
                         </div>
                     </div>
                     <div class="divider"></div>
@@ -32,7 +32,7 @@
                                 v-for="file in files" 
                                 :key="file.name" 
                                 :file="file" 
-                                @click="readDir(file)">
+                                @click="readDir(file.name)">
                             </file>
                         </ul>
                     </div>
@@ -81,7 +81,11 @@
                 loading: 0,
                 inside_archive: 0,
                 archive_location: String,
-                sort_types: ['name', 'size', 'time']
+                sort: {
+                    name: {direction: 'asc'}, 
+                    size: {direction: 'asc'}, 
+                    time:{direction: 'asc'} 
+                }
             }
         },
         methods: {
@@ -124,18 +128,19 @@
                     this.curr_dir = '/';
                     this.$store.commit('setCWD', this.curr_dir)
                 } else {
-                    deb(this.curr_dir, dir, target_dir, path.resolve(this.curr_dir, dir))
-                    this.prev_dir = this.curr_dir
-                    this.curr_dir = path.resolve(this.curr_dir, dir)
-                    this.$store.commit('setCWD', this.curr_dir)
+                    // deb(this.curr_dir, dir, target_dir, path.resolve(this.curr_dir, dir))
 
                     glob(getDirPattern(this.inside_archive), {cwd: target_dir}, async (err, files) => {
-                        files =  await Promise.all(_.map(files, async file => await getFileStats(file, this.$store.state.Browser.curr_dir)))
-                        files = _.concat({
-                            name: '../',
-                            hidden: false
-                        }, files)
-                        deb('files:', files)
+                        files =  await Promise.all(_.map(files, async file => await getFileStats(file, target_dir)))
+                        if (path.parse(target_dir).root !== target_dir) {
+                            files = _.concat({
+                                name: '../',
+                                hidden: false
+                            }, files)
+                        }
+                        this.prev_dir = this.curr_dir
+                        this.curr_dir = path.resolve(this.curr_dir, dir)
+                        this.$store.commit('setCWD', this.curr_dir)
                         if (err) return this.showError(err)
                         this.files = files
                         this.loading = 0
@@ -145,19 +150,28 @@
             showError(err) {
                 console.warn(err)
             },
-            sort(type) {
-                switch (type) {
-                    case 'name':
-                        this.files = []
-                        break;
-                    // case 'size':
-                    //     const sort = _.sortBy(this.files, )
-                    //     break;
-                    // case 'time':
-                    //     const sort = _.sortBy(this.files, file => {})
-                    //     this.files = 
-                    //     break;
+            sortFiles(type) {
+                this.sort[type].direction = this.handleSortDirection(type)
+                const sort_mode = {
+                    name: 'name',
+                    size: 'data.size',
+                    time: 'data.mtime'
                 }
+                this.files = _.orderBy(this.files, sort_mode[type], this.sort[type].direction)
+            },
+            handleSortDirection(type) {
+                switch (this.sort[type].direction) { 
+                    case 'asc': 
+                        return 'desc'
+                        break
+                    case 'desc': 
+                        return ''
+                        break
+                    default :
+                        return 'asc'
+                        break
+                }
+
             }
         },
         created() {
