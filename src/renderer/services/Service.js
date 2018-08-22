@@ -1,13 +1,16 @@
 import path from 'path'
 import extract from 'extract-zip'
 import fs from 'fs-extra'
+import _7zip from '7zip'
+
+const _7z = _7zip['7z']
 
 export const getDirPattern = (inside_archive) => {
     let pattern = '*'
     // deb('!inside', !inside_archive)
     if (!inside_archive) {
         pattern = '*(!(*.*)';
-        'rar, zip'.split(', ').forEach(ext => pattern = pattern + `|*.${ext}`)
+        'rar, zip, 7z'.split(', ').forEach(ext => pattern = pattern + `|*.${ext}`)
         pattern = pattern + ')'
     }
     return pattern
@@ -51,6 +54,21 @@ const extractArchive = (source_path, target_dir) => {
                     resolve(target_dir)
                 })
                 break
+            case '.7z':
+                const spawn = require('child_process').spawn
+                const seven_zip = spawn(_7z, ['x', source_path, '-y', '-o' + target_dir])
+                seven_zip.on('close', function (code) {
+                    resolve(target_dir)
+                    deb('sad')
+                });
+                seven_zip.stdout.on('data', function (data) {
+                    deb(data)
+                });
+                seven_zip.stderr.on('data', function (data) {
+                    console.log('stderr: ' + data);
+                });
+        
+                break;
         }
     })
 }
