@@ -3,31 +3,54 @@
         <div class="browser">
             <aside class="browser__drivelist">
                 <ul>
-                    <li v-for="drive in drives" v-bind:class="{loading: loading}">
+                    <li v-for="drive in drives" :class="{loading: loading}" :key="drive">
                         <a
                             @click="readDir(drive)"
-                            class="truncate btn-flat waves-effect waves-teal"
+                            class="truncate btn-flat waves-effect waves-teal browser__drive"
                         ><i class="material-icons left">desktop_windows</i>{{drive}}</a>
                     </li>
                 </ul>
             </aside>
-            <main class="browser__main" v-bind:class="{loading: loading}">
+            <main class="browser__main" :class="{loading: loading}">
                 <div class="section">
                     <a class="btn-flat waves-effect waves-teal" @click="readDir(prev_dir)"><i
                             class="material-icons left">history</i><span>Previous</span></a>
                     <div class="divider"></div>
-                    <ul>
-                        <li v-for="file in files">
-                            <a
-                                @click="readDir(file)"
-                                class="truncate btn-flat waves-effect waves-teal"
-                            ><i class="material-icons left" v-text="getType(file)"></i>{{file}}</a>
-                        </li>
-                    </ul>
+                    <div class="sort-bar">
+                        <div class="sort-row">
+                            <div
+                                class="btn-flat waves-effect waves-teal sort"
+                                v-for="(val, type) in sort" 
+                                :key="type"
+                                @click="sortFiles(type)">
+                                {{type}}
+                                <i class="material-icons right" v-if="val.direction === 'asc'">arrow_drop_up</i>
+                                <i class="material-icons right" v-if="val.direction === 'desc'">arrow_drop_down</i>
+                                <i class="material-icons right" v-if="val.direction !== 'desc' && val.direction !== 'asc'">remove</i>
+                                </div>
+                        </div>
+                    </div>
+                    <div class="divider"></div>
+                    <div 
+                        class="btn-flat waves-effect waves-teal parent_dir" 
+                        @click="readDir('../')"
+                        v-if="show_prev">
+                        ../
+                    </div>
+                    <div class="files-wrap">
+                        <ul class="files">
+                            <file 
+                                v-for="file in files" 
+                                :key="file.name" 
+                                :file="file" 
+                                @click="readDir(file.name)">
+                            </file>
+                        </ul>
+                    </div>
                 </div>
             </main>
         </div>
-        <div class="loader-wrap center-align" v-bind:class="{loading: loading}">
+        <div class="loader-wrap center-align" :class="{loading: loading}">
             <div class="preloader-wrapper big active">
                 <div class="spinner-layer spinner-blue-only">
                     <div class="circle-clipper left">
@@ -42,6 +65,7 @@
                 </div>
             </div>
             <p class="flow-text">Opening the archive...</p>
+            <!-- TODO: progress bar -->
         </div>
     </div>
 </template>
@@ -53,22 +77,31 @@
     import path from 'path'
     import _ from 'lodash'
     import {getDirPattern, getWinDrives, openFile} from '@/services/Service'
+    import {getFileStats} from '@/services/File'
+    import File from './File/File'
 
     export default {
         name: 'Browser',
+        components: {File},
         data: () => {
             return {
                 prev_dir: process.env.HOMEPATH,
                 curr_dir: process.env.HOMEPATH,
-                files: null,
-                drives: null,
+                files: Array,
+                drives: Array,
                 loading: 0,
                 inside_archive: 0,
-                archive_location: null
+                archive_location: String,
+                show_prev: true,
+                sort: {
+                    name: {direction: 'asc'}, 
+                    size: {direction: 'asc'}, 
+                    time: {direction: 'asc'} 
+                }
             }
         },
         methods: {
-            readDir: function (dir, inside_archive) {
+            readDir: async function(dir, inside_archive) {
                 let target_dir = path.resolve(this.curr_dir, dir)
                 const curr_dir_parsed = path.parse(this.curr_dir);
 
@@ -80,20 +113,22 @@
                     if (target_dir.search(this.inside_archive) < 0) {
                         this.inside_archive = 0
                         target_dir = this.archive_location
-                        this.curr_dir = target_dir + '/' + this.inside_archive //refactor this part
+                        this.curr_dir = path.resolve(target_dir, this.inside_archive) //refactor this part
                     }
                 }
 
                 try {
+                    this.loading = 1
                     const stat = fs.statSync(target_dir)
                     if (stat.isFile()) {
-                        this.loading = 1
                         openFile(target_dir)
                             .then(dir => {
                                 this.loading = 0
                                 this.readDir(dir, path.parse(dir).name)
                             })
                         return false;
+                    } else {
+                        this.loading = 0
                     }
                 } catch (err) {
 //                        console.warn(err)
@@ -103,45 +138,51 @@
                     this.files = this.drives
                     this.prev_dir = this.curr_dir
                     this.curr_dir = '/';
+                    this.$store.commit('setCWD', this.curr_dir)
                 } else {
-                    deb(this.curr_dir, dir, target_dir, path.resolve(this.curr_dir, dir))
-                    glob(getDirPattern(this.inside_archive), {cwd: target_dir}, (err, files) => {
-                        files = _.concat('../', files)
-                        if (err) return this.showError(err)
+                    // deb(this.curr_dir, dir, target_dir, path.resolve(this.curr_dir, dir))
+
+                    glob(getDirPattern(this.inside_archive), {cwd: target_dir}, async (err, files) => {
+                        files =  await Promise.all(_.map(files, async file => await getFileStats(file, target_dir)))
                         this.prev_dir = this.curr_dir
                         this.curr_dir = path.resolve(this.curr_dir, dir)
+                        this.$store.commit('setCWD', this.curr_dir)
+                        if (err) return this.showError(err)
                         this.files = files
                         this.loading = 0
                     })
                 }
+                this.show_prev = path.parse(target_dir).root !== target_dir
             },
             showError(err) {
                 console.warn(err)
             },
-            getType(file) {
-                if (file === '../') {
-                    return ''
+            sortFiles(type) {
+                this.sort[type].direction = this.handleSortDirection(type)
+                const sort_mode = {
+                    name: 'name',
+                    size: 'data.size',
+                    time: 'data.mtime'
                 }
-                try {
-                    file = fs.statSync(path.resolve(this.curr_dir, file))
-                } catch (err) {
-                    console.log(err)
-                    return 'lock'
-                }
-                return file.isDirectory() ? 'folder' : 'storage';
+                let [types, directions] = [[],[]]
+                _.forEach(this.sort, (o, key) => {
+                    _.isEmpty(o.direction) || types.push(sort_mode[key]) && directions.push(this.sort[key].direction)
+                })
+                this.files = _.orderBy(this.files, types, directions)
             },
-            sort(type) {
-                switch (type) {
-                    case 'name':
-                        this.files = _.sortBy(this.files, file)
-                        break;
-                    case 'type':
-                        this.files = _.sortBy(this.files, file)
-                        break;
-                    case 'time':
-                        this.files = _.sortBy(this.files, file)
-                        break;
+            handleSortDirection(type) {
+                switch (this.sort[type].direction) { 
+                    case 'asc': 
+                        return 'desc'
+                        break
+                    case 'desc': 
+                        return ''
+                        break
+                    default :
+                        return 'asc'
+                        break
                 }
+
             }
         },
         created() {
@@ -157,10 +198,9 @@
 </script>
 
 <style lang="less">
-    .btn-flat {
-        text-transform: none;
+    .parent_dir {
+        width: 100%;
     }
-
     .browser {
         font-size: 0;
     }
@@ -169,15 +209,22 @@
         display: inline-block;
         vertical-align: top;
         width: 150px;
-        /*padding-top: 20px;*/
+        padding-top: 20px;
         opacity: 1;
         transition: opacity 250ms ease;
+    }
+
+    .browser__drive {
+        width: 100%;
+        &:hover {
+            background: fade(black, 5%)
+        }
     }
 
     .browser__main {
         display: inline-block;
         vertical-align: top;
-        /*width: calc(100% - 150px);*/
+        width: calc(~"100% - 150px");
         opacity: 1;
         transition: opacity 250ms ease;
         &.loading {
@@ -191,21 +238,55 @@
         left: 50%;
         top: 50%;
         transform: translate(-50%, -50%);
+        z-index: -1;
         &.loading {
+            z-index: 1;
             opacity: 1
         }
     }
-
-    @accent: teal;
-    a {
-        &:hover {
-            color: @accent;
-            text-decoration: underline;
-        }
-    }
-
     .center-align {
         width: 100%;
     }
+    
+    .files-wrap {
+        max-height: calc(~"100vh - 104px");
+        overflow: auto;
+    }
 
+    .files {
+        display: table;
+        width: 100%;
+    }
+
+    .sort-bar {
+        display: table;
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .sort-row {
+        display: table-row;
+    }
+    .sort {
+        display: table-cell;
+    }
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+    background: #f1f1f1; 
+    }
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background: #888; 
+    transition: background 200ms ease;
+    border-radius: 10px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+    background: rgb(110, 160, 160); 
+}
 </style>
