@@ -12,10 +12,14 @@ export async function getFileStats(file, curr_dir) {
     }
     return fs.stat(path.resolve(curr_dir, file))
         .then(data => {
+            const data_stats = _.clone(data)
+            data_stats.mtime = data.mtime.getTime()
+            data_stats.atime = data.atime.getTime()
+            data_stats.ctime = data.ctime.getTime()
             return {
                 type: data.isDirectory() ? 'folder' : 'storage',
                 name: file,
-                data: data,
+                data: data_stats,
                 hidden: 0,
                 display: getDisplayStats(data)
             }

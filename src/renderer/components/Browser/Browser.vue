@@ -22,10 +22,21 @@
                                 class="btn-flat waves-effect waves-teal sort"
                                 v-for="(val, type) in sort" 
                                 :key="type"
-                                @click="sortFiles(type)">{{type}}</div>
+                                @click="sortFiles(type)">
+                                {{type}}
+                                <i class="material-icons right" v-if="val.direction === 'asc'">arrow_drop_up</i>
+                                <i class="material-icons right" v-if="val.direction === 'desc'">arrow_drop_down</i>
+                                <i class="material-icons right" v-if="val.direction !== 'desc' && val.direction !== 'asc'">remove</i>
+                                </div>
                         </div>
                     </div>
                     <div class="divider"></div>
+                    <div 
+                        class="btn-flat waves-effect waves-teal parent_dir" 
+                        @click="readDir('../')"
+                        v-if="show_prev">
+                        ../
+                    </div>
                     <div class="files-wrap">
                         <ul class="files">
                             <file 
@@ -81,10 +92,11 @@
                 loading: 0,
                 inside_archive: 0,
                 archive_location: String,
+                show_prev: true,
                 sort: {
                     name: {direction: 'asc'}, 
                     size: {direction: 'asc'}, 
-                    time:{direction: 'asc'} 
+                    time: {direction: 'asc'} 
                 }
             }
         },
@@ -132,12 +144,6 @@
 
                     glob(getDirPattern(this.inside_archive), {cwd: target_dir}, async (err, files) => {
                         files =  await Promise.all(_.map(files, async file => await getFileStats(file, target_dir)))
-                        if (path.parse(target_dir).root !== target_dir) {
-                            files = _.concat({
-                                name: '../',
-                                hidden: false
-                            }, files)
-                        }
                         this.prev_dir = this.curr_dir
                         this.curr_dir = path.resolve(this.curr_dir, dir)
                         this.$store.commit('setCWD', this.curr_dir)
@@ -146,6 +152,7 @@
                         this.loading = 0
                     })
                 }
+                this.show_prev = path.parse(target_dir).root !== target_dir
             },
             showError(err) {
                 console.warn(err)
@@ -157,7 +164,11 @@
                     size: 'data.size',
                     time: 'data.mtime'
                 }
-                this.files = _.orderBy(this.files, sort_mode[type], this.sort[type].direction)
+                let [types, directions] = [[],[]]
+                _.forEach(this.sort, (o, key) => {
+                    _.isEmpty(o.direction) || types.push(sort_mode[key]) && directions.push(this.sort[key].direction)
+                })
+                this.files = _.orderBy(this.files, types, directions)
             },
             handleSortDirection(type) {
                 switch (this.sort[type].direction) { 
@@ -187,7 +198,9 @@
 </script>
 
 <style lang="less">
-
+    .parent_dir {
+        width: 100%;
+    }
     .browser {
         font-size: 0;
     }
