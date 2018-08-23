@@ -70,8 +70,8 @@
         </div>
         <vue-context ref="menu">
             <ul slot-scope="child">
-                <li @click="onClick($event.target.innerText)">Rename</li>
-                <li @click="unzip($event, child.data)">Unzip</li>
+                <li>Rename</li>
+                <li v-if="child.data && child.data.type==='storage'" @click="unzip($event, child.data)">Unzip</li>
             </ul>
         </vue-context>
     </div>
@@ -109,9 +109,11 @@
             }
         },
         methods: {
-            unzip(e, file) {
-                deb(path.resolve(this.curr_dir, file.name), path.resolve(this.curr_dir, path.parse(file.name).name))
-                extractArchive(path.resolve(this.curr_dir, file.name), path.resolve(this.curr_dir, path.parse(file.name).name))
+            async unzip(e, file) {
+                await extractArchive(path.resolve(this.curr_dir, file.name), path.resolve(this.curr_dir, path.parse(file.name).name))
+                const file_statted = await getFileStats(path.parse(file.name).name, this.curr_dir)
+                this.files.push(file_statted)
+                this.sortFiles()
             },
             readDir: async function(dir, inside_archive) {
                 let target_dir = path.resolve(this.curr_dir, dir)
