@@ -1,7 +1,7 @@
 <template>
     <div class="max-height">
         <div class="browser">
-            <aside class="browser__drivelist">
+            <aside class="browser__drivelist z-depth-2">
                 <ul>
                     <li v-for="drive in drives" :class="{loading: loading}" :key="drive">
                         <a
@@ -16,7 +16,7 @@
                     <a class="btn-flat waves-effect waves-teal" @click="readDir(prev_dir)"><i
                             class="material-icons left">history</i><span>Previous</span></a>
                     <div class="divider"></div>
-                    <div class="sort-bar">
+                    <div class="sort-bar z-depth-1">
                         <div class="sort-row">
                             <div
                                 class="btn-flat waves-effect waves-teal sort"
@@ -43,7 +43,8 @@
                                 v-for="file in files" 
                                 :key="file.name" 
                                 :file="file" 
-                                @click="readDir(file.name)">
+                                @click="readDir(file.name)"
+                                @right-click="$refs.menu.open">
                             </file>
                         </ul>
                     </div>
@@ -67,6 +68,12 @@
             <p class="flow-text">Opening the archive...</p>
             <!-- TODO: progress bar -->
         </div>
+        <vue-context ref="menu">
+            <ul slot-scope="child">
+                <li @click="onClick($event.target.innerText)">Rename</li>
+                <li @click="unzip($event, child.data)">Unzip</li>
+            </ul>
+        </vue-context>
     </div>
 </template>
 
@@ -76,13 +83,14 @@
     import async from 'async'
     import path from 'path'
     import _ from 'lodash'
-    import {getDirPattern, getWinDrives, openFile} from '@/services/Service'
+    import {getDirPattern, getWinDrives, openFile, extractArchive} from '@/services/Service'
     import {getFileStats} from '@/services/File'
     import File from './File/File'
+    import { VueContext } from 'vue-context';
 
     export default {
         name: 'Browser',
-        components: {File},
+        components: {File, VueContext},
         data: () => {
             return {
                 prev_dir: process.env.HOMEPATH,
@@ -94,13 +102,17 @@
                 archive_location: String,
                 show_prev: true,
                 sort: {
-                    name: {direction: 'asc'}, 
-                    size: {direction: 'asc'}, 
-                    time: {direction: 'asc'} 
+                    name: {direction: ''}, 
+                    size: {direction: ''}, 
+                    time: {direction: ''} 
                 }
             }
         },
         methods: {
+            unzip(e, file) {
+                deb(path.resolve(this.curr_dir, file.name), path.resolve(this.curr_dir, path.parse(file.name).name))
+                extractArchive(path.resolve(this.curr_dir, file.name), path.resolve(this.curr_dir, path.parse(file.name).name))
+            },
             readDir: async function(dir, inside_archive) {
                 let target_dir = path.resolve(this.curr_dir, dir)
                 const curr_dir_parsed = path.parse(this.curr_dir);
@@ -117,6 +129,7 @@
                     }
                 }
 
+                // --If target directory is a file
                 try {
                     this.loading = 1
                     const stat = fs.statSync(target_dir)
@@ -131,8 +144,8 @@
                         this.loading = 0
                     }
                 } catch (err) {
-//                        console.warn(err)
                 }
+                // --
 
                 if (dir === '/' || ((_.isEmpty(curr_dir_parsed.base) || curr_dir_parsed.base === '..') && dir === '../')) {
                     this.files = this.drives
@@ -149,6 +162,7 @@
                         this.$store.commit('setCWD', this.curr_dir)
                         if (err) return this.showError(err)
                         this.files = files
+                        this.sortFiles()
                         this.loading = 0
                     })
                 }
@@ -158,7 +172,7 @@
                 console.warn(err)
             },
             sortFiles(type) {
-                this.sort[type].direction = this.handleSortDirection(type)
+                !type || (this.sort[type].direction = this.handleSortDirection(type))
                 const sort_mode = {
                     name: 'name',
                     size: 'data.size',
@@ -182,7 +196,6 @@
                         return 'asc'
                         break
                 }
-
             }
         },
         created() {
@@ -206,11 +219,15 @@
     }
 
     .browser__drivelist {
+        background: white;
         display: inline-block;
         vertical-align: top;
         width: 150px;
         padding-top: 20px;
+        height: 100vh;
         opacity: 1;
+        z-index: 2;
+        position: relative;
         transition: opacity 250ms ease;
     }
 
@@ -226,6 +243,8 @@
         vertical-align: top;
         width: calc(~"100% - 150px");
         opacity: 1;
+        z-index: 1;
+        position: relative;
         transition: opacity 250ms ease;
         &.loading {
             opacity: 0
@@ -269,24 +288,31 @@
     .sort {
         display: table-cell;
     }
-::-webkit-scrollbar {
-    width: 10px;
-}
-
-/* Track */
-::-webkit-scrollbar-track {
-    background: #f1f1f1; 
+    ::-webkit-scrollbar {
+        width: 10px;
     }
 
-/* Handle */
-::-webkit-scrollbar-thumb {
-    background: #888; 
-    transition: background 200ms ease;
-    border-radius: 10px;
-}
+    /* Track */
+    ::-webkit-scrollbar-track {
+        background: #f1f1f1; 
+        }
 
-/* Handle on hover */
-::-webkit-scrollbar-thumb:hover {
-    background: rgb(110, 160, 160); 
-}
+    /* Handle */
+    ::-webkit-scrollbar-thumb {
+        background: #888; 
+        transition: background 200ms ease;
+        border-radius: 10px;
+    }
+
+    /* Handle on hover */
+    ::-webkit-scrollbar-thumb:hover {
+        background: rgb(110, 160, 160); 
+    }
+
+    .v-context {
+        border-radius: 4px;
+        background: white;
+        box-shadow: 0 8px 17px 2px rgba(0,0,0,0.14), 0 3px 14px 2px rgba(0,0,0,0.12), 0 5px 5px -3px rgba(0,0,0,0.2) !important;
+        outline: none;
+    }
 </style>

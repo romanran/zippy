@@ -1,5 +1,10 @@
 <template>
-    <li class="truncate file" v-if="!file.hidden" @click="$emit('click')">
+    <li 
+        class="truncate file" 
+        v-if="!file.hidden" 
+        @click="$emit('click')"
+        @contextmenu.prevent="$emit('right-click', $event, file)"
+    >
         <div class="file__col icon"><i class="material-icons left" v-text="file.type" v-if="file.type"></i></div>
         <div class="file__col name"><span>{{file.name}}</span></div>
         <div class="file__col size" v-if="file.display"><span>{{file.display.size}}</span></div>
