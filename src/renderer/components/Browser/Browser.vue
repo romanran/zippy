@@ -30,7 +30,7 @@
                                 class="btn-flat waves-effect waves-teal sort"
                                 v-for="(val, type) in sort" 
                                 :key="type"
-                                @click="sortFiles(type)">
+                                @click="handleSortDirection(type); sortFiles()">
                                 {{type}}
                                 <i class="material-icons right" v-if="val.direction === 'asc'">arrow_drop_up</i>
                                 <i class="material-icons right" v-if="val.direction === 'desc'">arrow_drop_down</i>
@@ -110,8 +110,9 @@
                 archive_location: String,
                 show_prev: true,
                 filter_zip: true,
+                sort_type: 'name',
                 sort: {
-                    name: {direction: ''}, 
+                    name: {direction: 'asc'}, 
                     size: {direction: ''}, 
                     time: {direction: ''} 
                 }
@@ -120,6 +121,7 @@
         methods: {
             async unzip(e, file) {
                 await extractArchive(path.resolve(this.curr_dir, file.name), path.resolve(this.curr_dir, path.parse(file.name).name))
+                
                 const file_statted = await getFileStats(path.parse(file.name).name, this.curr_dir)
                 this.files.push(file_statted)
                 this.sortFiles()
@@ -146,7 +148,7 @@
                     this.loading = 1
                     const stat = fs.statSync(target_dir)
                     if (stat.isFile()) {
-                        openFile(target_dir)
+                        await openFile(target_dir)
                             .then(dir => {
                                 this.loading = 0
                                 this.readDir(dir, path.parse(dir).name)
@@ -173,7 +175,7 @@
                         this.$store.commit('setCWD', this.curr_dir)
                         if (err) return this.showError(err)
                         this.files = files
-                        this.sortFiles('name')
+                        this.sortFiles()
                         this.loading = 0
                     })
                 }
@@ -182,10 +184,8 @@
             showError(err) {
                 console.warn(err)
             },
-            sortFiles(type) {
-                deb(type, this.handleSortDirection(type))
-                this.sort[type].direction = this.handleSortDirection(type)
-                deb(this.sort)
+            sortFiles() {
+                const type = this.sort_type
                 const sort_mode = {
                     name: 'name',
                     size: 'data.size',
@@ -195,21 +195,24 @@
                 _.forEach(this.sort, (o, key) => {
                     key === type || (this.sort[key].direction = '')
                 })
-                deb(type, sort_mode[type], this.sort[type].direction)
+
                 this.files = _.orderBy(this.files, sort_mode[type], this.sort[type].direction)
             },
             handleSortDirection(type) {
+                let dir = ''
                 switch (this.sort[type].direction) { 
                     case 'asc': 
-                        return 'desc'
+                        dir = 'desc'
                         break
                     case 'desc': 
-                        return 'asc'
+                        dir = 'asc'
                         break
                     default :
-                        return 'desc'
+                        dir = 'desc'
                         break
                 }
+                this.sort[type].direction = dir
+                this.sort_type = type
             }
         },
         created() {
@@ -225,6 +228,9 @@
 </script>
 
 <style lang="less">
+    .teal {
+        color: white;
+    }
     .btn-flat {
         text-transform: none;
         transition: background 150ms ease;
