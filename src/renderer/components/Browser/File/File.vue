@@ -1,5 +1,10 @@
 <template>
-    <li class="truncate file" v-if="!file.hidden" @click="$emit('click')">
+    <li 
+        class="truncate file" 
+        v-if="!file.hidden" 
+        @click="$emit('click')"
+        @contextmenu.prevent="$emit('right-click', $event, file)"
+    >
         <div class="file__col icon"><i class="material-icons left" v-text="file.type" v-if="file.type"></i></div>
         <div class="file__col name"><span>{{file.name}}</span></div>
         <div class="file__col size" v-if="file.display"><span>{{file.display.size}}</span></div>
@@ -26,9 +31,6 @@
 </script>
 
 <style lang="less">
-    .btn-flat {
-        text-transform: none;
-    }
     @accent: teal;
     .file {
         color: #444;
@@ -36,14 +38,13 @@
         cursor: pointer;
         letter-spacing: 0.5px;
         font-family: Roboto;
-        transition :all 200ms ease;
         display: table-row;
         &:nth-child(2n + 1) {
             background: fade(teal, 5%)
         }
+        transition: background 150ms ease;
         &:hover {
-            color: @accent;
-            text-decoration: underline;
+            background: fade(black, 10%)
         }
     }
 
