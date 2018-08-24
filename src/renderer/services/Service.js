@@ -91,8 +91,10 @@ export async function openFile(file_path) {
 }
 
 export async function handleExtracted(target) {
-    deb(target)
-    glob(target + '*', (err, files) => {
-        deb(files)   
+    glob(target + '/*', async (err, files) => {
+        if (files.length === 1) {
+            const stats = await fs.stat(files[0])
+            fs.move(files[0], target)
+        }
     })
 }
