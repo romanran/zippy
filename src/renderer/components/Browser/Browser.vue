@@ -13,8 +13,16 @@
             </aside>
             <main class="browser__main" :class="{loading: loading}">
                 <div class="section">
-                    <a class="btn-flat waves-effect waves-teal" @click="readDir(prev_dir)"><i
-                            class="material-icons left">history</i><span>Previous</span></a>
+                    <a class="btn-flat waves-effect waves-teal" @click="readDir(prev_dir)">
+                        <i class="material-icons left">history</i><span>Previous</span>
+                    </a>
+                    <a 
+                        class="btn-flat waves-effect waves-teal" 
+                        @click="filter_zip = !filter_zip; readDir(curr_dir)"
+                        :class="{teal: filter_zip}"
+                    >
+                        <i class="material-icons left">content_cut</i><span>Filter zip</span>
+                    </a>
                     <div class="divider"></div>
                     <div class="sort-bar z-depth-1">
                         <div class="sort-row">
@@ -101,6 +109,7 @@
                 inside_archive: 0,
                 archive_location: String,
                 show_prev: true,
+                filter_zip: true,
                 sort: {
                     name: {direction: ''}, 
                     size: {direction: ''}, 
@@ -157,15 +166,14 @@
                     this.$store.commit('setCWD', this.curr_dir)
                 } else {
                     // deb(this.curr_dir, dir, target_dir, path.resolve(this.curr_dir, dir))
-
-                    glob(getDirPattern(this.inside_archive), {cwd: target_dir}, async (err, files) => {
+                    glob(getDirPattern(this.inside_archive, this.filter_zip), {cwd: target_dir}, async (err, files) => {
                         files =  await Promise.all(_.map(files, async file => await getFileStats(file, target_dir)))
                         this.prev_dir = this.curr_dir
                         this.curr_dir = path.resolve(this.curr_dir, dir)
                         this.$store.commit('setCWD', this.curr_dir)
                         if (err) return this.showError(err)
                         this.files = files
-                        this.sortFiles()
+                        this.sortFiles('name')
                         this.loading = 0
                     })
                 }
@@ -175,17 +183,20 @@
                 console.warn(err)
             },
             sortFiles(type) {
-                !type || (this.sort[type].direction = this.handleSortDirection(type))
+                deb(type, this.handleSortDirection(type))
+                this.sort[type].direction = this.handleSortDirection(type)
+                deb(this.sort)
                 const sort_mode = {
                     name: 'name',
                     size: 'data.size',
                     time: 'data.mtime'
                 }
-                let [types, directions] = [[],[]]
+
                 _.forEach(this.sort, (o, key) => {
-                    _.isEmpty(o.direction) || types.push(sort_mode[key]) && directions.push(this.sort[key].direction)
+                    key === type || (this.sort[key].direction = '')
                 })
-                this.files = _.orderBy(this.files, types, directions)
+                deb(type, sort_mode[type], this.sort[type].direction)
+                this.files = _.orderBy(this.files, sort_mode[type], this.sort[type].direction)
             },
             handleSortDirection(type) {
                 switch (this.sort[type].direction) { 
@@ -193,10 +204,10 @@
                         return 'desc'
                         break
                     case 'desc': 
-                        return ''
+                        return 'asc'
                         break
                     default :
-                        return 'asc'
+                        return 'desc'
                         break
                 }
             }
@@ -278,7 +289,10 @@
     }
     
     .files-wrap {
-        max-height: calc(~"100vh - 140px");
+        max-height: calc(~"100vh - 106px");
+        .parent_dir + & {
+            max-height: calc(~"100vh - 140px");
+        }
         overflow: auto;
     }
 

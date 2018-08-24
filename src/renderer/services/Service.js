@@ -2,15 +2,20 @@ import path from 'path'
 import extract from 'extract-zip'
 import fs from 'fs-extra'
 import _7zip from '7zip'
+import { filter } from 'bluebird-lst';
 
 const _7z = _7zip['7z']
 
-export function getDirPattern(inside_archive) {
+export function getDirPattern(inside_archive, filter_zip = true) {
     let pattern = '*'
     // deb('!inside', !inside_archive)
     if (!inside_archive) {
         pattern = '*(!(*.*)';
-        'rar, zip, 7z'.split(', ').forEach(ext => pattern = pattern + `|*.${ext}`)
+        if (filter_zip) {
+            'rar, zip, 7z'.split(', ').forEach(ext => pattern += `|*.${ext}`)
+        } else {
+            pattern += '|*.*'
+        }
         pattern = pattern + ')'
     }
     return pattern
