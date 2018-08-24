@@ -31,9 +31,6 @@
 </script>
 
 <style lang="less">
-    .btn-flat {
-        text-transform: none;
-    }
     @accent: teal;
     .file {
         color: #444;
@@ -41,14 +38,13 @@
         cursor: pointer;
         letter-spacing: 0.5px;
         font-family: Roboto;
-        transition :all 200ms ease;
         display: table-row;
         &:nth-child(2n + 1) {
             background: fade(teal, 5%)
         }
+        transition: background 150ms ease;
         &:hover {
-            color: @accent;
-            text-decoration: underline;
+            background: fade(black, 10%)
         }
     }
 

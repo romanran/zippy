@@ -93,8 +93,8 @@
         components: {File, VueContext},
         data: () => {
             return {
-                prev_dir: process.env.HOMEPATH,
-                curr_dir: process.env.HOMEPATH,
+                prev_dir: path.resolve(process.env.HOME),
+                curr_dir: path.resolve(process.env.HOME),
                 files: Array,
                 drives: Array,
                 loading: 0,
@@ -117,6 +117,7 @@
             },
             readDir: async function(dir, inside_archive) {
                 let target_dir = path.resolve(this.curr_dir, dir)
+                document.title = target_dir
                 const curr_dir_parsed = path.parse(this.curr_dir);
 
                 if (inside_archive) {
@@ -213,11 +214,21 @@
 </script>
 
 <style lang="less">
+    .btn-flat {
+        text-transform: none;
+        transition: background 150ms ease;
+        &:hover {
+            background: fade(black, 10%)
+        }
+    }
     .parent_dir {
         width: 100%;
     }
     .browser {
         font-size: 0;
+        overflow: hidden;
+        border-top: 1px solid #DDD;
+        height: calc(~"100vh - 1px");
     }
 
     .browser__drivelist {
@@ -226,7 +237,7 @@
         vertical-align: top;
         width: 150px;
         padding-top: 20px;
-        height: 100vh;
+        min-height: 100vh;
         opacity: 1;
         z-index: 2;
         position: relative;
@@ -234,10 +245,7 @@
     }
 
     .browser__drive {
-        width: 100%;
-        &:hover {
-            background: fade(black, 5%)
-        }
+        width: 100%;        
     }
 
     .browser__main {
@@ -270,7 +278,7 @@
     }
     
     .files-wrap {
-        max-height: calc(~"100vh - 104px");
+        max-height: calc(~"100vh - 140px");
         overflow: auto;
     }
 
