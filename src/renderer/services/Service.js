@@ -2,7 +2,7 @@ import path from 'path'
 import extract from 'extract-zip'
 import fs from 'fs-extra'
 import _7zip from '7zip'
-import { filter } from 'bluebird-lst';
+import glob from 'glob'
 
 const _7z = _7zip['7z']
 
@@ -88,4 +88,11 @@ export async function openFile(file_path) {
             return extractArchive(file_path, target_path)
                 .then(() => target_path)
         })
+}
+
+export async function handleExtracted(target) {
+    deb(target)
+    glob(target + '*', (err, files) => {
+        deb(files)   
+    })
 }

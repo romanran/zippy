@@ -91,10 +91,11 @@
     import async from 'async'
     import path from 'path'
     import _ from 'lodash'
-    import {getDirPattern, getWinDrives, openFile, extractArchive} from '@/services/Service'
+    import {getDirPattern, getWinDrives, openFile, extractArchive, handleExtracted} from '@/services/Service'
     import {getFileStats} from '@/services/File'
     import File from './File/File'
-    import { VueContext } from 'vue-context';
+    import { VueContext } from 'vue-context'
+    import storage from 'electron-json-storage'
 
     export default {
         name: 'Browser',
@@ -120,11 +121,15 @@
         },
         methods: {
             async unzip(e, file) {
-                await extractArchive(path.resolve(this.curr_dir, file.name), path.resolve(this.curr_dir, path.parse(file.name).name))
-                
-                const file_statted = await getFileStats(path.parse(file.name).name, this.curr_dir)
-                this.files.push(file_statted)
-                this.sortFiles()
+                const [from, target] = [path.resolve(this.curr_dir, file.name), path.resolve(this.curr_dir, path.parse(file.name).name)]
+                const exists = await fs.pathExists(target)
+                await extractArchive(from, target)
+                handleExtracted(target)
+                if (!exists) {
+                    const file_statted = await getFileStats(path.parse(file.name).name, this.curr_dir)
+                    this.files.push(file_statted)
+                    this.sortFiles()
+                }
             },
             readDir: async function(dir, inside_archive) {
                 let target_dir = path.resolve(this.curr_dir, dir)
@@ -168,7 +173,7 @@
                     this.$store.commit('setCWD', this.curr_dir)
                 } else {
                     // deb(this.curr_dir, dir, target_dir, path.resolve(this.curr_dir, dir))
-                    glob(getDirPattern(this.inside_archive, this.filter_zip), {cwd: target_dir}, async (err, files) => {
+                    await glob(getDirPattern(this.inside_archive, this.filter_zip), {cwd: target_dir}, async (err, files) => {
                         files =  await Promise.all(_.map(files, async file => await getFileStats(file, target_dir)))
                         this.prev_dir = this.curr_dir
                         this.curr_dir = path.resolve(this.curr_dir, dir)
@@ -222,7 +227,11 @@
                     this.drives = drives
                 })
                 .catch(err => this.showError(err))
-            this.readDir(this.curr_dir)
+            storage.get('curr_dir', (error, data) => {
+                if (error) throw error;
+                this.curr_dir = data
+                this.readDir(this.curr_dir)
+            });
         }
     }
 </script>
