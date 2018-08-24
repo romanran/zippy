@@ -13,8 +13,16 @@
             </aside>
             <main class="browser__main" :class="{loading: loading}">
                 <div class="section">
-                    <a class="btn-flat waves-effect waves-teal" @click="readDir(prev_dir)"><i
-                            class="material-icons left">history</i><span>Previous</span></a>
+                    <a class="btn-flat waves-effect waves-teal" @click="readDir(prev_dir)">
+                        <i class="material-icons left">history</i><span>Previous</span>
+                    </a>
+                    <a 
+                        class="btn-flat waves-effect waves-teal" 
+                        @click="filter_zip = !filter_zip; readDir(curr_dir)"
+                        :class="{teal: filter_zip}"
+                    >
+                        <i class="material-icons left">content_cut</i><span>Filter zip</span>
+                    </a>
                     <div class="divider"></div>
                     <div class="sort-bar z-depth-1">
                         <div class="sort-row">
@@ -22,7 +30,7 @@
                                 class="btn-flat waves-effect waves-teal sort"
                                 v-for="(val, type) in sort" 
                                 :key="type"
-                                @click="sortFiles(type)">
+                                @click="handleSortDirection(type); sortFiles()">
                                 {{type}}
                                 <i class="material-icons right" v-if="val.direction === 'asc'">arrow_drop_up</i>
                                 <i class="material-icons right" v-if="val.direction === 'desc'">arrow_drop_down</i>
@@ -83,10 +91,11 @@
     import async from 'async'
     import path from 'path'
     import _ from 'lodash'
-    import {getDirPattern, getWinDrives, openFile, extractArchive} from '@/services/Service'
+    import {getDirPattern, getWinDrives, openFile, extractArchive, handleExtracted} from '@/services/Service'
     import {getFileStats} from '@/services/File'
     import File from './File/File'
-    import { VueContext } from 'vue-context';
+    import { VueContext } from 'vue-context'
+    import storage from 'electron-json-storage'
 
     export default {
         name: 'Browser',
@@ -101,8 +110,10 @@
                 inside_archive: 0,
                 archive_location: String,
                 show_prev: true,
+                filter_zip: true,
+                sort_type: 'name',
                 sort: {
-                    name: {direction: ''}, 
+                    name: {direction: 'asc'}, 
                     size: {direction: ''}, 
                     time: {direction: ''} 
                 }
@@ -110,10 +121,15 @@
         },
         methods: {
             async unzip(e, file) {
-                await extractArchive(path.resolve(this.curr_dir, file.name), path.resolve(this.curr_dir, path.parse(file.name).name))
-                const file_statted = await getFileStats(path.parse(file.name).name, this.curr_dir)
-                this.files.push(file_statted)
-                this.sortFiles()
+                const [from, target] = [path.resolve(this.curr_dir, file.name), path.resolve(this.curr_dir, path.parse(file.name).name)]
+                const exists = await fs.pathExists(target)
+                await extractArchive(from, target)
+                handleExtracted(target)
+                if (!exists) {
+                    const file_statted = await getFileStats(path.parse(file.name).name, this.curr_dir)
+                    this.files.push(file_statted)
+                    this.sortFiles()
+                }
             },
             readDir: async function(dir, inside_archive) {
                 let target_dir = path.resolve(this.curr_dir, dir)
@@ -137,7 +153,7 @@
                     this.loading = 1
                     const stat = fs.statSync(target_dir)
                     if (stat.isFile()) {
-                        openFile(target_dir)
+                        await openFile(target_dir)
                             .then(dir => {
                                 this.loading = 0
                                 this.readDir(dir, path.parse(dir).name)
@@ -157,8 +173,7 @@
                     this.$store.commit('setCWD', this.curr_dir)
                 } else {
                     // deb(this.curr_dir, dir, target_dir, path.resolve(this.curr_dir, dir))
-
-                    glob(getDirPattern(this.inside_archive), {cwd: target_dir}, async (err, files) => {
+                    await glob(getDirPattern(this.inside_archive, this.filter_zip), {cwd: target_dir}, async (err, files) => {
                         files =  await Promise.all(_.map(files, async file => await getFileStats(file, target_dir)))
                         this.prev_dir = this.curr_dir
                         this.curr_dir = path.resolve(this.curr_dir, dir)
@@ -174,31 +189,35 @@
             showError(err) {
                 console.warn(err)
             },
-            sortFiles(type) {
-                !type || (this.sort[type].direction = this.handleSortDirection(type))
+            sortFiles() {
+                const type = this.sort_type
                 const sort_mode = {
                     name: 'name',
                     size: 'data.size',
                     time: 'data.mtime'
                 }
-                let [types, directions] = [[],[]]
+
                 _.forEach(this.sort, (o, key) => {
-                    _.isEmpty(o.direction) || types.push(sort_mode[key]) && directions.push(this.sort[key].direction)
+                    key === type || (this.sort[key].direction = '')
                 })
-                this.files = _.orderBy(this.files, types, directions)
+
+                this.files = _.orderBy(this.files, sort_mode[type], this.sort[type].direction)
             },
             handleSortDirection(type) {
+                let dir = ''
                 switch (this.sort[type].direction) { 
                     case 'asc': 
-                        return 'desc'
+                        dir = 'desc'
                         break
                     case 'desc': 
-                        return ''
+                        dir = 'asc'
                         break
                     default :
-                        return 'asc'
+                        dir = 'desc'
                         break
                 }
+                this.sort[type].direction = dir
+                this.sort_type = type
             }
         },
         created() {
@@ -208,12 +227,19 @@
                     this.drives = drives
                 })
                 .catch(err => this.showError(err))
-            this.readDir(this.curr_dir)
+            storage.get('curr_dir', (error, data) => {
+                if (error) throw error;
+                this.curr_dir = data
+                this.readDir(this.curr_dir)
+            });
         }
     }
 </script>
 
 <style lang="less">
+    .teal {
+        color: white;
+    }
     .btn-flat {
         text-transform: none;
         transition: background 150ms ease;
@@ -278,7 +304,10 @@
     }
     
     .files-wrap {
-        max-height: calc(~"100vh - 140px");
+        max-height: calc(~"100vh - 106px");
+        .parent_dir + & {
+            max-height: calc(~"100vh - 140px");
+        }
         overflow: auto;
     }
 

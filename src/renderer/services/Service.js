@@ -2,15 +2,20 @@ import path from 'path'
 import extract from 'extract-zip'
 import fs from 'fs-extra'
 import _7zip from '7zip'
+import glob from 'glob'
 
 const _7z = _7zip['7z']
 
-export function getDirPattern(inside_archive) {
+export function getDirPattern(inside_archive, filter_zip = true) {
     let pattern = '*'
     // deb('!inside', !inside_archive)
     if (!inside_archive) {
         pattern = '*(!(*.*)';
-        'rar, zip, 7z'.split(', ').forEach(ext => pattern = pattern + `|*.${ext}`)
+        if (filter_zip) {
+            'rar, zip, 7z'.split(', ').forEach(ext => pattern += `|*.${ext}`)
+        } else {
+            pattern += '|*.*'
+        }
         pattern = pattern + ')'
     }
     return pattern
@@ -72,17 +77,24 @@ export function extractArchive(source_path, target_dir) {
     })
 }
 
-export function openFile(file_path) {
+export async function openFile(file_path) {
     const file_path_parsed = path.parse(file_path)
     const target_path = path.resolve(process.env.TMP, file_path_parsed.name)
-    return new Promise((resolve, reject) => {
-        fs.pathExists(target_path)
-            .then(exists => {
-                if (exists) {
-                    return resolve(target_path)
-                }
-                extractArchive(file_path, target_path)
-                    .then(() => resolve(target_path))
-            })
+    return fs.pathExists(target_path)
+        .then(exists => {
+            if (exists) {
+                return target_path
+            }
+            return extractArchive(file_path, target_path)
+                .then(() => target_path)
+        })
+}
+
+export async function handleExtracted(target) {
+    glob(target + '/*', async (err, files) => {
+        if (files.length === 1) {
+            const stats = await fs.stat(files[0])
+            fs.move(files[0], target)
+        }
     })
 }
