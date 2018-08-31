@@ -3,14 +3,14 @@ import path from 'path'
 import _ from 'lodash'
 import prettyBytes from 'pretty-bytes'
 import moment from 'moment'
-
 export async function getFileStats(file, curr_dir) {
     if (file === '../') {
         return {
             type: ''
         }
     }
-    return fs.stat(path.resolve(curr_dir, file))
+    const full_path = path.resolve(curr_dir, file)
+    return fs.stat(full_path)
         .then(data => {
             const data_stats = _.clone(data)
             data_stats.mtime = data.mtime.getTime()
@@ -21,6 +21,7 @@ export async function getFileStats(file, curr_dir) {
                 name: file,
                 data: data_stats,
                 hidden: 0,
+                full_path: full_path,
                 display: getDisplayStats(data)
             }
         })
@@ -38,4 +39,8 @@ function getDisplayStats(stats) {
         size: stats.size ? prettyBytes(stats.size) : '',
         time: moment(stats.mtime).format('YYYY/MM/DD HH:mm')
     }
+}
+
+export function renameDir(file) {
+    deb(file)
 }
