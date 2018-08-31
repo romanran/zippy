@@ -78,10 +78,19 @@
         </div>
         <vue-context ref="menu">
             <ul slot-scope="child">
-                <li>Rename</li>
+                <li @click="rename(child.data)">Rename</li>
                 <li v-if="child.data && child.data.type==='storage'" @click="unzip($event, child.data)">Unzip</li>
             </ul>
         </vue-context>
+        <div ref="renameModal" class="modal">
+            <div class="modal-content">
+                <input type="text"/>
+            </div>
+            <div class="modal-footer">
+                <a href="#!" class="modal-close waves-effect waves-red btn-flat">Cancel</a>
+                <a href="#!" class="modal-close waves-effect waves-green btn-flat">Accept</a>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -92,7 +101,7 @@
     import path from 'path'
     import _ from 'lodash'
     import {getDirPattern, getWinDrives, openFile, extractArchive, handleExtracted} from '@/services/Service'
-    import {getFileStats} from '@/services/File'
+    import {getFileStats, renameDir} from '@/services/File'
     import File from './File/File'
     import { VueContext } from 'vue-context'
     import storage from 'electron-json-storage'
@@ -120,6 +129,10 @@
             }
         },
         methods: {
+            rename() {
+                $(this.$refs.renameModal).modal()
+                $(this.$refs.renameModal)[0].M_Modal.open()
+            },
             async unzip(e, file) {
                 const [from, target] = [path.resolve(this.curr_dir, file.name), path.resolve(this.curr_dir, path.parse(file.name).name)]
                 const exists = await fs.pathExists(target)
