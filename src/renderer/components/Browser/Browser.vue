@@ -178,25 +178,17 @@
                 } catch (err) {
                 }
                 // --
-
-                if (dir === '/' || ((_.isEmpty(curr_dir_parsed.base) || curr_dir_parsed.base === '..') && dir === '../')) {
-                    this.files = this.drives
+                // deb(this.curr_dir, dir, target_dir, path.resolve(this.curr_dir, dir))
+                await glob(getDirPattern(this.inside_archive, this.filter_zip), {cwd: target_dir}, async (err, files) => {
+                    files =  await Promise.all(_.map(files, async file => await getFileStats(file, target_dir)))
                     this.prev_dir = this.curr_dir
-                    this.curr_dir = '/';
+                    this.curr_dir = path.resolve(this.curr_dir, dir)
                     this.$store.commit('setCWD', this.curr_dir)
-                } else {
-                    // deb(this.curr_dir, dir, target_dir, path.resolve(this.curr_dir, dir))
-                    await glob(getDirPattern(this.inside_archive, this.filter_zip), {cwd: target_dir}, async (err, files) => {
-                        files =  await Promise.all(_.map(files, async file => await getFileStats(file, target_dir)))
-                        this.prev_dir = this.curr_dir
-                        this.curr_dir = path.resolve(this.curr_dir, dir)
-                        this.$store.commit('setCWD', this.curr_dir)
-                        if (err) return this.showError(err)
-                        this.files = files
-                        this.sortFiles()
-                        this.loading = 0
-                    })
-                }
+                    if (err) return this.showError(err)
+                    this.files = files
+                    this.sortFiles()
+                    this.loading = 0
+                })
                 this.show_prev = path.parse(target_dir).root !== target_dir
             },
             showError(err) {
