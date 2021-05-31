@@ -62,6 +62,7 @@ export function extractArchive(sourcePath, targetDir) {
                 const spawn = require('child_process').spawn
                 const sevenZip = spawn(_7z, ['x', sourcePath, '-y', '-o' + targetDir])
                 sevenZip.on('close', code => {
+                    console.log('7z close code', code)
                     resolve(targetDir)
                 })
                 sevenZip.stdout.on('data', data => {
@@ -72,7 +73,13 @@ export function extractArchive(sourcePath, targetDir) {
                 })
             }
         }
-        extensions[path.parse(sourcePath).ext]()
+        const extension = path.parse(sourcePath).ext
+        const extractFunction = extensions[extension]
+        if (extractFunction) {
+            return extractFunction()
+        } else {
+            reject(extension)
+        }
     })
 }
 
