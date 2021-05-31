@@ -18,6 +18,9 @@ async function createWindow() {
             // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
             nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,
             contextIsolation: !process.env.ELECTRON_NODE_INTEGRATION
+        },
+        options: {
+            fullscreen: true
         }
     })
 
@@ -33,19 +36,19 @@ async function createWindow() {
 }
 
 // Quit when all windows are closed.
-// app.on('window-all-closed', () => {
-//     // On macOS it is common for applications and their menu bar
-//     // to stay active until the user quits explicitly with Cmd + Q
-//     if (process.platform !== 'darwin') {
-//         app.quit()
-//     }
-// })
+app.on('window-all-closed', () => {
+    // On macOS it is common for applications and their menu bar
+    // to stay active until the user quits explicitly with Cmd + Q
+    if (process.platform !== 'darwin') {
+        app.quit()
+    }
+})
 
-// app.on('activate', () => {
-//     // On macOS it's common to re-create a window in the app when the
-//     // dock icon is clicked and there are no other windows open.
-//     if (BrowserWindow.getAllWindows().length === 0) createWindow()
-// })
+app.on('activate', () => {
+    // On macOS it's common to re-create a window in the app when the
+    // dock icon is clicked and there are no other windows open.
+    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+})
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
@@ -54,7 +57,11 @@ app.on('ready', async () => {
     if (isDevelopment && !process.env.IS_TEST) {
         // Install Vue Devtools
         try {
-            await installExtension(VUEJS_DEVTOOLS)
+            await installExtension({
+                id: 'ljjemllljcmogpfapbkkighbhhppjdbg',
+                electron: '>=1.2.1'
+            })
+            console.log('Vue devtools installed')
         } catch (e) {
             console.error('Vue Devtools failed to install:', e.toString())
         }

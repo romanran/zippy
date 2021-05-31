@@ -1,7 +1,6 @@
 <template>
     <div class="browser">
         <drive-list class="browser__drivelist" :drives="drives" :loading="loadingDrives" @click="readDir" />
-        {{ drives }}
         <!-- <main class="browser__main" :class="{ loading: loading }">
             <div class="section">
                 <a class="btn-flat waves-effect waves-teal" @click="readDir(prev_dir)"> <i class="material-icons left">history</i><span>Previous</span> </a>
@@ -58,12 +57,12 @@ export default {
     components: { Loader, DriveList },
     setup() {
         const store = useStore()
+
+        const loadingDrives = computed(() => store.state.browser.loadingDrives)
+        const loading = computed(() => store.state.browser.loading)
+        const drives = computed(() => store.state.browser.drives)
+
         store.dispatch('browser/getDrives')
-
-        const loadingDrives = computed(() => store.state.loadingDrives)
-        const loading = computed(() => store.state.loading)
-        const drives = computed(() => store.state.drives)
-
         return {
             loadingDrives,
             loading,
@@ -76,4 +75,23 @@ export default {
 }
 </script>
 
-<style lang="scss"></style>
+<style lang="scss">
+.btn-flat {
+    text-transform: none;
+    transition: background 150ms ease;
+    &:hover {
+        background: fade(black, 10%);
+    }
+}
+.browser__drivelist {
+    display: inline-block;
+    vertical-align: top;
+    width: 150px;
+    padding-top: 20px;
+    min-height: 100vh;
+    opacity: 1;
+    z-index: 2;
+    position: relative;
+    transition: opacity 250ms ease;
+}
+</style>

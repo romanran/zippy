@@ -13,19 +13,17 @@ export async function getFileStats(file, currentDir) {
     const fullPath = path.resolve(currentDir, file)
     try {
         const data = await fs.stat(fullPath)
-        data => {
-            const data_stats = _.clone(data)
-            data_stats.mtime = data.mtime.getTime()
-            data_stats.atime = data.atime.getTime()
-            data_stats.ctime = data.ctime.getTime()
-            return {
-                type: data.isDirectory() ? 'folder' : 'storage',
-                name: file,
-                data: data_stats,
-                hidden: 0,
-                fullPath: fullPath,
-                display: getDisplayStats(data)
-            }
+        const dataStats = _.clone(data)
+        dataStats.mtime = data.mtime.getTime()
+        dataStats.atime = data.atime.getTime()
+        dataStats.ctime = data.ctime.getTime()
+        return {
+            type: data.isDirectory() ? 'folder' : 'storage',
+            name: file,
+            data: dataStats,
+            hidden: 0,
+            fullPath: fullPath,
+            display: getDisplayStats(data)
         }
     } catch (err) {
         console.warn(err)
@@ -43,4 +41,6 @@ function getDisplayStats(stats) {
     }
 }
 
-export function renameDir(file) {}
+export function renameDir(file) {
+    console.log(file)
+}

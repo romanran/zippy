@@ -1,10 +1,10 @@
 import { createApp } from 'vue'
 import App from './App.vue'
 import store from './store'
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHashHistory } from 'vue-router'
 
 const router = createRouter({
-    history: createWebHistory(),
+    history: createWebHashHistory(),
     routes: [
         {
             path: '/',
@@ -17,3 +17,7 @@ const app = createApp(App)
 app.use(store)
 app.use(router)
 app.mount('#app')
+
+process.on('unhandledRejection', error => {
+    console.error(error)
+})

@@ -11,7 +11,7 @@ export default {
 </script>
 
 <style lang="scss">
-// @import '~materialize-css/dist/css/materialize.css';
+@import '~materialize-css/dist/css/materialize.css';
 @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
 * {
     box-sizing: inherit;
