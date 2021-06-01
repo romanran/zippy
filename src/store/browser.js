@@ -3,6 +3,7 @@ import fs from 'fs-extra'
 import glob from 'glob'
 import path from 'path'
 import _ from 'lodash'
+import os from 'os'
 
 import { getFileStats } from '../utilities/file'
 import { getDirPattern, getWinDrives, openFile } from '../utilities/service'
@@ -18,8 +19,8 @@ const initialState = {
     openedArchive: false,
     archiveDir: null,
     filterZipFiles: false,
-    previousDir: path.resolve(process.env.HOME),
-    currentDir: path.resolve(process.env.HOME),
+    previousDir: path.resolve(os.homedir()),
+    currentDir: path.resolve(os.homedir()),
     previousDirExists: false
 }
 
