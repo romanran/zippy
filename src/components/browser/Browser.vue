@@ -1,40 +1,11 @@
 <template>
     <div class="browser">
         <drive-list class="browser__drivelist" :drives="drives" :loading="loadingDrives" @click="readDir" />
-        <!-- <main class="browser__main" :class="{ loading: loading }">
+        <main class="browser__main" :class="{ loading: loading }">
             <div class="section">
-                <a class="btn-flat waves-effect waves-teal" @click="readDir(prev_dir)"> <i class="material-icons left">history</i><span>Previous</span> </a>
-                <a
-                    class="btn-flat waves-effect waves-teal"
-                    @click="
-                        filter_zip = !filter_zip
-                        readDir(curr_dir)
-                    "
-                    :class="{ teal: filter_zip }"
-                >
-                    <i class="material-icons left">content_cut</i><span>Filter zip</span>
-                </a>
+                <filter-bar @previous="readDir(previousDir)" @filter="readDir(currentDir)" />
                 <div class="divider"></div>
-                <div class="sort-bar z-depth-1">
-                    <div class="sort-row">
-                        <div
-                            class="btn-flat waves-effect waves-teal sort"
-                            v-for="(val, type) in sort"
-                            :key="type"
-                            @click="
-                                handleSortDirection(type)
-                                sortFiles()
-                            "
-                        >
-                            {{ type }}
-                            <i class="material-icons right" v-if="val.direction === 'asc'">arrow_drop_up</i>
-                            <i class="material-icons right" v-if="val.direction === 'desc'">arrow_drop_down</i>
-                            <i class="material-icons right" v-if="val.direction !== 'desc' && val.direction !== 'asc'">remove</i>
-                        </div>
-                    </div>
-                </div>
-                <div class="divider"></div>
-                <div class="btn-flat waves-effect waves-teal parent_dir" @click="readDir('../')" v-if="show_prev">
+                <div class="btn-flat waves-effect waves-teal parent_dir" @click="readDir('../')" v-show="previousDirExists">
                     ../
                 </div>
                 <div class="files-wrap">
@@ -43,8 +14,25 @@
                     </ul>
                 </div>
             </div>
-        </main> -->
-        <loader :loading="loading"></loader>
+        </main>
+        <loader class="browser__loader" :loading="loading"></loader>
+        <!-- <vue-context ref="menu">
+            <template v-slot:default="{ child }">
+                <ul>
+                    <li @click="rename(child.data)">Rename</li>
+                    <li v-if="child.data && child.data.type === 'storage'" @click="unzip($event, child.data)">Unzip</li>
+                </ul>
+            </template>
+        </vue-context> -->
+        <div class="modal">
+            <div class="modal-content">
+                <input type="text" />
+            </div>
+            <div class="modal-footer">
+                <button class="modal-close waves-effect waves-red btn-flat">Cancel</button>
+                <button class="modal-close waves-effect waves-green btn-flat">Accept</button>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -61,15 +49,20 @@ export default {
         const loadingDrives = computed(() => store.state.browser.loadingDrives)
         const loading = computed(() => store.state.browser.loading)
         const drives = computed(() => store.state.browser.drives)
+        const previousDir = computed(() => store.state.browser.previousDir)
+        const currentDir = computed(() => store.state.browser.currentDir)
 
         store.dispatch('browser/getDrives')
         return {
             loadingDrives,
             loading,
             drives,
+            previousDir,
+            currentDir,
             readDir(path) {
                 store.dispatch('browser/readDir', path)
-            }
+            },
+            rename() {}
         }
     }
 }
@@ -93,5 +86,17 @@ export default {
     z-index: 2;
     position: relative;
     transition: opacity 250ms ease;
+}
+.browser__loader {
+    opacity: 0;
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: -1;
+    &.loading {
+        z-index: 1;
+        opacity: 1;
+    }
 }
 </style>
