@@ -37,7 +37,7 @@ export async function getFileStats(file, currentDir) {
 function getDisplayStats(stats) {
     return {
         size: stats.size ? prettyBytes(stats.size) : '',
-        time: format(stats.mtime, 'YYYY/MM/DD HH:mm')
+        time: format(stats.mtime, 'yyyy/MM/DD HH:mm')
     }
 }
 

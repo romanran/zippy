@@ -7,8 +7,7 @@ import Browser from './browser/Browser'
 
 export default {
     name: 'landing-page',
-    components: { Browser },
-    methods: {}
+    components: { Browser }
 }
 </script>
 
