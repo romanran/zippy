@@ -19,7 +19,3 @@ const app = createApp(App)
 app.use(store)
 app.use(router)
 app.mount('#app')
-
-process.on('unhandledRejection', error => {
-    console.error(error)
-})
