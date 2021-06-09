@@ -30,7 +30,7 @@ async function addZippyContextMenu() {
                 type: 'REG_DEFAULT'
             },
             Icon: {
-                value: 'W:\\Projects\\zippy\\public\\logo.png',
+                value: 'W:\\Projects\\zippy\\public\\zippy.ico',
                 type: 'REG_SZ'
             }
         },

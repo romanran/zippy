@@ -53,8 +53,11 @@ export function extractArchive(sourcePath, targetDir) {
     return new Promise((resolve, reject) => {
         const extensions = {
             '.zip': () => {
-                extract(sourcePath, { dir: targetDir }, function(err) {
-                    if (err) console.warn(err)
+                extract(sourcePath, { dir: targetDir }, error => {
+                    if (error) {
+                        console.warn(error)
+                        return reject(error)
+                    }
                     resolve(targetDir)
                 })
             },
@@ -70,6 +73,7 @@ export function extractArchive(sourcePath, targetDir) {
                 })
                 sevenZip.stderr.on('data', data => {
                     console.log('stderr: ' + data)
+                    reject(data)
                 })
             }
         }

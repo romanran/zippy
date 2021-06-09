@@ -7,7 +7,7 @@ module.exports = {
                 appId: 'com.zippy.app',
                 productName: 'zippy',
                 win: {
-                    icon: 'public/logo.png'
+                    icon: './public/logo.png'
                 }
             }
         }
