@@ -10,7 +10,7 @@
                 </div>
                 <div class="files-wrap">
                     <ul class="files">
-                        <file v-for="file in files" :key="file.name" :file="file" @click="readDir(file.name)" @right-click="$refs.menu.open"> </file>
+                        <file v-for="file in files" :key="file.name" :file="file" @click="readDir(file.name)"> </file>
                     </ul>
                 </div>
             </div>
@@ -37,12 +37,13 @@
 </template>
 
 <script>
-import { computed } from 'vue'
 import DriveList from './components/DriveList.vue'
+import FilterBar from './components/FilterBar.vue'
 import Loader from './components/Loader.vue'
+import { computed } from 'vue'
 import { useStore } from 'vuex'
 export default {
-    components: { Loader, DriveList },
+    components: { Loader, DriveList, FilterBar },
     setup() {
         const store = useStore()
 
@@ -51,14 +52,17 @@ export default {
         const drives = computed(() => store.state.browser.drives)
         const previousDir = computed(() => store.state.browser.previousDir)
         const currentDir = computed(() => store.state.browser.currentDir)
+        const files = computed(() => store.state.browser.files)
 
         store.dispatch('browser/getDrives')
+        store.dispatch('browser/readDir')
         return {
             loadingDrives,
             loading,
             drives,
             previousDir,
             currentDir,
+            files,
             readDir(path) {
                 store.dispatch('browser/readDir', path)
             },
@@ -86,6 +90,18 @@ export default {
     z-index: 2;
     position: relative;
     transition: opacity 250ms ease;
+}
+.browser__main {
+    display: inline-block;
+    vertical-align: top;
+    width: calc(100% - 150px);
+    opacity: 1;
+    z-index: 1;
+    position: relative;
+    transition: opacity 250ms ease;
+    &.loading {
+        opacity: 0;
+    }
 }
 .browser__loader {
     opacity: 0;

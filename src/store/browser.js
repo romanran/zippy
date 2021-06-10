@@ -19,8 +19,8 @@ const initialState = {
     openedArchive: false,
     archiveDir: null,
     filterZipFiles: false,
-    previousDir: path.resolve(os.homedir()),
     currentDir: path.resolve(os.homedir()),
+    previousDir: null,
     previousDirExists: false
 }
 
@@ -48,7 +48,7 @@ export default {
         readDir: async function(context, dir, openedArchive) {
             console.log('dir', dir)
             if (!dir) {
-                return
+                dir = context.state.currentDir
             }
             let targetDir = path.resolve(context.state.currentDir, dir)
             document.title = targetDir
@@ -83,7 +83,7 @@ export default {
                 files = await Promise.all(_.map(files, async file => await getFileStats(file, targetDir)))
                 context.state.previousDir = context.state.currentDir
                 context.state.currentDir = path.resolve(context.state.currentDir, dir)
-                this.$store.commit('setCWD', context.state.currentDir)
+                context.commit('setCWD', context.state.currentDir)
                 if (err) return context.dispatch('showError', err)
                 context.commit('files', files)
                 context.commit('loading', false)
