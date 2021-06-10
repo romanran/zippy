@@ -19,34 +19,35 @@
 </template>
 
 <script>
-// import { computed } from 'vue'
-// import { useStore } from 'vuex'
-// import { directionsEnum, sortEnum } from '@/store/filters'
+import { computed } from 'vue'
+import { useStore } from 'vuex'
+import { directionsEnum, sortEnum } from '@/store/filters'
 export default {
     setup() {
-        // const store = useStore()
-        // const filterZipFiles = computed({
-        //     get() {
-        //         return store.state.browser.filterZipFiles
-        //     },
-        //     set(value) {
-        //         store.commit('browser/filterZipFiles', value)
-        //     }
-        // })
-        // const sort = computed(() => store.state.browser.sort)
-        // return {
-        //     directionsEnum,
-        //     sortEnum,
-        //     sort,
-        //     sortClick(type) {
-        //         store.dispatch('filters/sortFiles', type)
-        //     },
-        //     filterZipClick() {
-        //         filterZipFiles.value = !filterZipFiles.value
-        //         this.$emit('filter')
-        //     }
-        // }
-    },
+        const store = useStore()
+
+        const filterZipFiles = computed({
+            get() {
+                return store.state.browser.filterZipFiles
+            },
+            set(value) {
+                store.commit('browser/filterZipFiles', value)
+            }
+        })
+        const sort = computed(() => store.state.browser.sort)
+        return {
+            directionsEnum,
+            sortEnum,
+            sort,
+            sortClick(type) {
+                store.dispatch('filters/sortFiles', type)
+            },
+            filterZipClick() {
+                filterZipFiles.value = !filterZipFiles.value
+                this.$emit('filter')
+            }
+        }
+    }
 }
 </script>
 

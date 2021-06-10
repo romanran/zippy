@@ -1,14 +1,12 @@
-const path = require('path')
-const { extractArchive } = require('../utilities/service')
-const { saveLog } = require('../utilities/log')
+import path from 'path'
+import { extractArchive } from '@/utilities/service'
+import { saveLog } from '../utilities/log'
 
-module.exports = {
-    async handleFile(filePath) {
-        const targetDir = path.parse(filePath).dir
-        try {
-            await extractArchive(filePath, targetDir)
-        } catch (error) {
-            saveLog('ERROR', 'extraction', error)
-        }
+export async function handleFile(filePath) {
+    const targetDir = path.parse(filePath).dir
+    try {
+        await extractArchive(filePath, targetDir)
+    } catch (error) {
+        saveLog('ERROR', 'extraction', error)
     }
 }
