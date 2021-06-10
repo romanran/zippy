@@ -5,9 +5,7 @@
             <div class="section">
                 <filter-bar @previous="readDir(previousDir)" @filter="readDir(currentDir)" />
                 <div class="divider"></div>
-                <div class="btn-flat waves-effect waves-teal parent_dir" @click="readDir('../')" v-show="previousDirExists">
-                    ../
-                </div>
+                <div class="btn-flat waves-effect waves-teal parent_dir" @click="readDir('../')" v-show="previousDirExists">../</div>
                 <div class="files-wrap">
                     <ul class="files">
                         <file v-for="file in files" :key="file.name" :file="file" @click="readDir(file.name)"> </file>
@@ -40,35 +38,36 @@
 import DriveList from './components/DriveList.vue'
 import FilterBar from './components/FilterBar.vue'
 import Loader from './components/Loader.vue'
-import { computed } from 'vue'
-import { useStore } from 'vuex'
+import File from './components/File.vue'
+// import { computed } from 'vue'
+// import { useStore } from 'vuex'
 export default {
-    components: { Loader, DriveList, FilterBar },
-    setup() {
-        const store = useStore()
+    components: { Loader, DriveList, FilterBar, File },
+    // setup() {
+    //     const store = useStore()
 
-        const loadingDrives = computed(() => store.state.browser.loadingDrives)
-        const loading = computed(() => store.state.browser.loading)
-        const drives = computed(() => store.state.browser.drives)
-        const previousDir = computed(() => store.state.browser.previousDir)
-        const currentDir = computed(() => store.state.browser.currentDir)
-        const files = computed(() => store.state.browser.files)
+    //     const loadingDrives = computed(() => store.state.browser.loadingDrives)
+    //     const loading = computed(() => store.state.browser.loading)
+    //     const drives = computed(() => store.state.browser.drives)
+    //     const previousDir = computed(() => store.state.browser.previousDir)
+    //     const currentDir = computed(() => store.state.browser.currentDir)
+    //     const files = computed(() => store.state.browser.files)
 
-        store.dispatch('browser/getDrives')
-        store.dispatch('browser/readDir')
-        return {
-            loadingDrives,
-            loading,
-            drives,
-            previousDir,
-            currentDir,
-            files,
-            readDir(path) {
-                store.dispatch('browser/readDir', path)
-            },
-            rename() {}
-        }
-    }
+    //     // store.dispatch('browser/getDrives')
+    //     // store.dispatch('browser/readDir')
+    //     return {
+    //         loadingDrives,
+    //         loading,
+    //         drives,
+    //         previousDir,
+    //         currentDir,
+    //         files,
+    //         readDir(path) {
+    //             store.dispatch('browser/readDir', path)
+    //         },
+    //         rename() {},
+    //     }
+    // },
 }
 </script>
 

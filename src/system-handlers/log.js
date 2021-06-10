@@ -1,7 +1,7 @@
 const fs = require('fs-extra')
 const { format } = require('date-fns')
 const os = require('os')
-const { unset } = require('lodash-es')
+const { unset } = require('lodash')
 
 module.exports = {
     async saveLog(type, name, error) {

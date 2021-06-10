@@ -1,18 +1,23 @@
 module.exports = {
+    publicPath: '',
     pluginOptions: {
         electronBuilder: {
-            nodeIntegration: true,
+            nodeIntegration: false,
             removeElectronJunk: false,
             builderOptions: {
                 appId: 'com.zippy.app',
                 productName: 'zippy',
                 win: {
-                    icon: './public/logo.png'
-                }
-            }
-        }
+                    icon: './public/zippy.ico',
+                },
+            },
+        },
     },
     configureWebpack: {
-        devtool: 'source-map'
-    }
+        output: {
+            filename: './[name].js',
+            chunkFilename: './[name].js',
+        },
+        devtool: 'source-map',
+    },
 }
