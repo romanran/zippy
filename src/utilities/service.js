@@ -1,11 +1,4 @@
-import path from 'path'
-import extract from 'extract-zip'
-import fs from 'fs-extra'
-import _7zip from '7zip'
-import glob from 'glob'
-
-const _7z = _7zip['7z']
-
+const saveLog = require('./log')
 export function getDirPattern(insideArchive, filterZip = true) {
     let pattern = '*'
     if (insideArchive) {
@@ -50,30 +43,27 @@ export function getWinDrives() {
 }
 
 export function extractArchive(sourcePath, targetDir) {
+    const path = require('path')
+
     return new Promise((resolve, reject) => {
         const extensions = {
             '.zip': () => {
+                const extract = require('extract-zip')
+
                 extract(sourcePath, { dir: targetDir }, error => {
                     if (error) {
-                        console.warn(error)
                         return reject(error)
                     }
-                    resolve(targetDir)
+                    resolve()
                 })
             },
             '.7z': () => {
-                const spawn = require('child_process').spawn
-                const sevenZip = spawn(_7z, ['x', sourcePath, '-y', '-o' + targetDir])
-                sevenZip.on('close', code => {
-                    console.log('7z close code', code)
-                    resolve(targetDir)
-                })
-                sevenZip.stdout.on('data', data => {
-                    console.log('data', data)
-                })
-                sevenZip.stderr.on('data', data => {
-                    console.log('stderr: ' + data)
-                    reject(data)
+                const _7z = require('7zip-min')
+                _7z.unpack(sourcePath, targetDir, error => {
+                    if (error) {
+                        return reject(error)
+                    }
+                    resolve()
                 })
             }
         }
@@ -82,22 +72,31 @@ export function extractArchive(sourcePath, targetDir) {
         if (extractFunction) {
             return extractFunction()
         } else {
-            reject(extension)
+            reject('Unhandled extension: ' + extension)
         }
     })
 }
 
-export async function openFile(file_path) {
-    const file_path_parsed = path.parse(file_path)
-    const target_path = path.resolve(process.env.TMP, file_path_parsed.name)
-    const exists = await fs.pathExists(target_path)
+export async function openFile(filePath) {
+    const fs = require('fs-extra')
+    const path = require('path')
+
+    const filePath_parsed = path.parse(filePath)
+    const targetPath = path.resolve(process.env.TMP, filePath_parsed.name)
+    const exists = await fs.pathExists(targetPath)
     if (exists) {
-        return target_path
+        return targetPath
     }
-    return extractArchive(file_path, target_path)
+    try {
+        await extractArchive(filePath, targetPath)
+    } catch (error) {
+        saveLog('ERROR', 'extraction', error)
+    }
 }
 
 export async function handleExtracted(target) {
+    const fs = require('fs-extra')
+    const glob = require('glob')
     glob(target + '/*', async (err, files) => {
         if (files.length !== 1) {
             return
