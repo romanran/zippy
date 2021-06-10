@@ -1,7 +1,11 @@
 const regedit = require('regedit')
+const { saveLog } = require('../utilities/log.js')
 
 const registryPaths = {
-    zip: 'HKCR\\.zip'
+    zip: 'HKCR\\.zip',
+    '7z': 'HKCR\\.7z',
+    rar: 'HKCR\\.rar',
+    '*': 'HKCR\\*'
 }
 
 const createExtensionPath = programId => {
@@ -10,22 +14,31 @@ const createExtensionPath = programId => {
         command: `HKCU\\Software\\Classes\\${programId}\\shell\\zippy\\command`
     }
 }
-function getExtensionsIds() {
+function getExtensionsIds(key) {
     return new Promise((resolve, reject) => {
-        regedit.list(registryPaths.zip, function(err, result) {
-            resolve({
-                zip: result[registryPaths.zip].values[''].value
-            })
+        if (key === '*') {
+            return key
+        }
+        regedit.list(registryPaths[key], (error, result) => {
+            if (error) {
+                return reject(error)
+            }
+            resolve(result[registryPaths[key]].values[''].value)
         })
     })
 }
 
-async function addZippyContextMenu() {
-    const programsIds = await getExtensionsIds()
-    const zipExtension = createExtensionPath(programsIds.zip)
+async function addExtensionContextMenu(key) {
+    let programsId
+    try {
+        programsId = await getExtensionsIds(key)
+    } catch (error) {
+        saveLog('ERROR', 'get-extension-id', error)
+    }
+    const zipExtension = createExtensionPath(programsId)
     const contextMenu = {
         [zipExtension.root]: {
-            zippy: {
+            default: {
                 value: 'Unzip',
                 type: 'REG_DEFAULT'
             },
@@ -35,14 +48,26 @@ async function addZippyContextMenu() {
             }
         },
         [zipExtension.command]: {
-            zippy: {
+            default: {
                 value: '"W:\\Projects\\zippy\\dist_electron\\win-unpacked\\zippy.exe" "%1"',
                 type: 'REG_DEFAULT'
             }
         }
     }
-    regedit.putValue(contextMenu, function(err) {
-        err && console.warn(err)
+    regedit.putValue(contextMenu, error => {
+        if (error && error.code === 2) {
+            regedit.createKey(zipExtension.command, error => {
+                if (error) {
+                    return saveLog('ERROR', `create-key-${key}`, error)
+                }
+                addExtensionContextMenu(key)
+            })
+        } else {
+            error && saveLog('ERROR', `add-registry-${key}`, error)
+        }
     })
 }
-addZippyContextMenu()
+
+Object.keys(registryPaths).forEach(key => {
+    addExtensionContextMenu(key)
+})
