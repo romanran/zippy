@@ -10,8 +10,7 @@ const registryPaths = {
 
 const createExtensionPath = programId => {
     return {
-        root: `HKCU\\Software\\Classes\\${programId}`,
-        app: `HKCU\\Software\\Classes\\${programId}\\shell\\zippy\\`,
+        root: `HKCU\\Software\\Classes\\${programId}\\shell\\zippy\\`,
         command: `HKCU\\Software\\Classes\\${programId}\\shell\\zippy\\command`
     }
 }
@@ -38,8 +37,8 @@ async function addExtensionContextMenu(key) {
     }
     const zipExtension = createExtensionPath(programsId)
     const contextMenu = {
-        [zipExtension.app]: {
-            zippy: {
+        [zipExtension.root]: {
+            default: {
                 value: 'Unzip',
                 type: 'REG_DEFAULT'
             },
@@ -49,23 +48,23 @@ async function addExtensionContextMenu(key) {
             }
         },
         [zipExtension.command]: {
-            zippy: {
+            default: {
                 value: '"W:\\Projects\\zippy\\dist_electron\\win-unpacked\\zippy.exe" "%1"',
                 type: 'REG_DEFAULT'
             }
         }
     }
     regedit.putValue(contextMenu, error => {
-        console.log(error?.message, error?.code)
-        if (error?.code === 2) {
-            regedit.createKey(zipExtension.root, error => {
+        if (error && error.code === 2) {
+            regedit.createKey(zipExtension.command, error => {
                 if (error) {
                     return saveLog('ERROR', `create-key-${key}`, error)
                 }
                 addExtensionContextMenu(key)
             })
+        } else {
+            error && saveLog('ERROR', `add-registry-${key}`, error)
         }
-        error && saveLog('ERROR', `add-registry-${key}`, error)
     })
 }
 

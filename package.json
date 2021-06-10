@@ -21,6 +21,7 @@
         "extract-zip": "^1.7.0",
         "fs-extra": "^7.0.1",
         "glob": "^7.1.7",
+        "lodash-es": "^4.17.21",
         "materialize-css": "^1.0.0",
         "pretty-bytes": "^5.6.0",
         "regedit": "^3.0.3",
