@@ -7,8 +7,8 @@
         <div class="divider"></div>
         <div class="sort-bar z-depth-1">
             <div class="sort-row">
-                <div class="btn-flat waves-effect waves-teal sort" v-for="(val, type) in sortEnum" :key="type" @click="sortClick">
-                    {{ type }}
+                <div class="btn-flat waves-effect waves-teal sort" v-for="(val, type) in sort" :key="type" @click="sortClick">
+                    {{ val }}
                     <i class="material-icons right" v-if="val.direction === directionsEnum.ASCENDING">arrow_drop_up</i>
                     <i class="material-icons right" v-if="val.direction === directionsEnum.DESCENDING">arrow_drop_down</i>
                     <i class="material-icons right" v-if="val.direction === directionsEnum.EMPTY">remove</i>
@@ -19,6 +19,7 @@
 </template>
 
 <script>
+import { computed } from 'vue'
 import { useStore } from 'vuex'
 import { directionsEnum, sortEnum } from '@/store/filters'
 export default {
@@ -27,15 +28,17 @@ export default {
 
         const filterZipFiles = computed({
             get() {
-                store.state.browser.filterZipFiles
+                return store.state.browser.filterZipFiles
             },
             set(value) {
-                context.commit('browser/filterZipFiles', value)
+                store.commit('browser/filterZipFiles', value)
             }
         })
+        const sort = computed(() => store.state.browser.sort)
         return {
             directionsEnum,
             sortEnum,
+            sort,
             sortClick(type) {
                 store.dispatch('filters/sortFiles', type)
             },

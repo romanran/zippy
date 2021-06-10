@@ -1,9 +1,3 @@
-import fs from 'fs-extra'
-import path from 'path'
-import _ from 'lodash'
-import prettyBytes from 'pretty-bytes'
-import { format } from 'date-fns'
-
 export async function getFileStats(file, currentDir) {
     if (file === '../') {
         return {
@@ -12,8 +6,11 @@ export async function getFileStats(file, currentDir) {
     }
     const fullPath = path.resolve(currentDir, file)
     try {
+        const path = require('path')
+        const fs = require('fs-extra')
+        const { clone } = require('lodash-es')
         const data = await fs.stat(fullPath)
-        const dataStats = _.clone(data)
+        const dataStats = clone(data)
         dataStats.mtime = data.mtime.getTime()
         dataStats.atime = data.atime.getTime()
         dataStats.ctime = data.ctime.getTime()
@@ -35,9 +32,12 @@ export async function getFileStats(file, currentDir) {
 }
 
 function getDisplayStats(stats) {
+    const { format } = require('date-fns')
+    const prettyBytes = require('pretty-bytes')
+
     return {
         size: stats.size ? prettyBytes(stats.size) : '',
-        time: format(stats.mtime, 'yyyy/MM/DD HH:mm')
+        time: format(stats.mtime, 'yyyy/MM/dd HH:mm')
     }
 }
 
