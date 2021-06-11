@@ -1,5 +1,5 @@
 <template>
-    <browser></browser>
+    <Browser />
 </template>
 
 <script>
@@ -7,7 +7,7 @@ import Browser from './browser/Browser'
 
 export default {
     name: 'landing-page',
-    components: { Browser }
+    components: { Browser },
 }
 </script>
 

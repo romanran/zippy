@@ -1,10 +1,9 @@
-const fs = require('fs-extra')
-const { format } = require('date-fns')
-const os = require('os')
-const { unset } = require('lodash-es')
-
 module.exports = {
     async saveLog(type, name, error) {
+        const fs = require('fs-extra')
+        const { format } = require('date-fns')
+        const os = require('os')
+        const { unset } = require('lodash')
         try {
             console.warn(type, name, error)
 
@@ -31,5 +30,5 @@ module.exports = {
             // ¯\_(ツ)_/¯
             console.warn(error)
         }
-    }
+    },
 }
