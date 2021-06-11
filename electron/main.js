@@ -1,10 +1,10 @@
 'use strict'
 const installExtension = require('electron-devtools-installer')
-const { saveLog } = require('../src/utilities/log')
-const path = require('path')
-const { handleFile } = require('../src/system-handlers/app')
-
 const { app, BrowserWindow } = require('electron')
+const path = require('path')
+
+const { handleFile } = require('./system-handlers/app')
+const { saveLog } = require('./utilities/log')
 
 const isDev = process.env.NODE_ENV === 'development'
 
@@ -22,11 +22,11 @@ if (unzipPath.base !== 'main.js' && unzipPath.ext) {
     let win
     const createWindow = async () => {
         win = new BrowserWindow({
-            width: 800,
-            height: 600,
+            width: 1600,
+            height: 1000,
             webPreferences: {
-                nodeIntegration: false,
-                // contextIsolation: true,
+                nodeIntegration: true,
+                contextIsolation: true,
                 preload: path.join(__dirname, 'preload.js'),
             },
         })
@@ -75,3 +75,6 @@ if (unzipPath.base !== 'main.js' && unzipPath.ext) {
         }
     }
 }
+
+// import Store from 'electron-store'
+// const storage = new Store()

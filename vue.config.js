@@ -1,4 +1,5 @@
 module.exports = {
+    publicPath: '',
     pluginOptions: {
         electronBuilder: {
             nodeIntegration: true,
@@ -7,12 +8,17 @@ module.exports = {
                 appId: 'com.zippy.app',
                 productName: 'zippy',
                 win: {
-                    icon: './public/logo.png'
-                }
-            }
-        }
+                    icon: './public/zippy.ico',
+                },
+            },
+        },
     },
     configureWebpack: {
-        devtool: 'source-map'
-    }
+        devtool: 'source-map',
+        output: {
+            // The filenames need to have a ./ otherwise Electron won't be able to find the files.
+            filename: './[name].js',
+            chunkFilename: './[name].js',
+        },
+    },
 }

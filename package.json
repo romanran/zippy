@@ -6,7 +6,6 @@
     "description": "Modern archives manager",
     "scripts": {
         "dev": "vue-cli-service build --watch",
-        "electron": "electron",
         "electron:start": "electron ./electron/main.js",
         "build:prod": "vue-cli-service build --modern --production",
         "dist:windows": "npm run build:prod && electron-builder --windows"
