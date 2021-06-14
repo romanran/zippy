@@ -45,7 +45,7 @@ export default {
                 }
             })
 
-            context.dispatch('browser/sortFiles', { sort: sortMode[type], direction })
+            context.dispatch('filters/sortFiles', { sort: sortMode[type], direction })
         },
     },
 }

@@ -1,13 +1,11 @@
 'use strict'
 const installExtension = require('electron-devtools-installer')
-const { app, BrowserWindow } = require('electron')
+const { app, BrowserWindow, ipcMain } = require('electron')
 const path = require('path')
 
 const { handleFile } = require('./system-handlers/app')
 const { saveLog } = require('./utilities/log')
-
 const isDev = process.env.NODE_ENV === 'development'
-
 const unzipPath = path.parse(process.argv[1])
 if (unzipPath.base !== 'main.js' && unzipPath.ext) {
     handleFile(process.argv[1])
@@ -20,7 +18,22 @@ if (unzipPath.base !== 'main.js' && unzipPath.ext) {
         })
 } else {
     let win
+    require('electron-reload')(__dirname, {
+        electron: path.join(process.cwd(), 'node_modules', '.bin', 'electron.cmd'),
+        forceHardReset: true,
+    })
     const createWindow = async () => {
+        if (isDev) {
+            try {
+                installExtension.default({
+                    id: 'ljjemllljcmogpfapbkkighbhhppjdbg',
+                    electron: '>=1.2.1',
+                })
+                console.log('Vue devtools installed')
+            } catch (e) {
+                console.error('Vue Devtools failed to install:', e.toString())
+            }
+        }
         win = new BrowserWindow({
             width: 1600,
             height: 1000,
@@ -31,28 +44,14 @@ if (unzipPath.base !== 'main.js' && unzipPath.ext) {
             },
         })
 
-        win.loadFile(path.join(__dirname, '..', 'dist', 'index.html'))
+        await win.loadFile(path.join(__dirname, '..', 'dist', 'index.html'))
 
         if (isDev) win.webContents.openDevTools()
     }
 
-    app.on('ready', () => {
+    app.on('ready', async () => {
         createWindow()
-
-        app.on('activate', async function () {
-            if (isDev) {
-                try {
-                    await installExtension({
-                        id: 'ljjemllljcmogpfapbkkighbhhppjdbg',
-                        electron: '>=1.2.1',
-                    })
-                    console.log('Vue devtools installed')
-                } catch (e) {
-                    console.error('Vue Devtools failed to install:', e.toString())
-                }
-            }
-            if (BrowserWindow.getAllWindows().length === 0) createWindow()
-        })
+        if (BrowserWindow.getAllWindows().length === 0) createWindow()
     })
 
     app.on('window-all-closed', () => {
@@ -76,5 +75,10 @@ if (unzipPath.base !== 'main.js' && unzipPath.ext) {
     }
 }
 
-// import Store from 'electron-store'
-// const storage = new Store()
+const Store = require('electron-store')
+const { readDir } = require('./service/browser')
+const storage = new Store()
+ipcMain.handle('readDir', async (event, payload) => {
+    const response = await readDir(payload.dir, payload.filterZipFiles)
+    return response
+})

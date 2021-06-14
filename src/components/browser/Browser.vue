@@ -8,7 +8,7 @@
                 <div class="btn-flat waves-effect waves-teal parent_dir" @click="readDir('../')" v-show="previousDirExists">../</div>
                 <div class="files-wrap">
                     <ul class="files">
-                        <file v-for="file in files" :key="file.name" :file="file" @click="readDir(file.name)"> </file>
+                        <file v-for="file in files" :key="file.name" :file="file" @click="readDir(file.fullPath)"> </file>
                     </ul>
                 </div>
             </div>
@@ -52,6 +52,7 @@ export default {
         const previousDir = computed(() => store.state.browser.previousDir)
         const currentDir = computed(() => store.state.browser.currentDir)
         const files = computed(() => store.state.browser.files)
+        const previousDirExists = computed(() => store.state.browser.previousDirExists)
 
         store.dispatch('browser/getDrives')
         store.dispatch('browser/readDir')
@@ -62,6 +63,7 @@ export default {
             previousDir,
             currentDir,
             files,
+            previousDirExists,
             readDir(path) {
                 store.dispatch('browser/readDir', path)
             },

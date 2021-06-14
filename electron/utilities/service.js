@@ -10,10 +10,11 @@ module.exports = {
                     const extract = require('extract-zip')
 
                     extract(sourcePath, { dir: targetDir }, (error) => {
+                        console.log('aaa poszlo zip', error)
                         if (error) {
                             return reject(error)
                         }
-                        resolve()
+                        resolve(targetDir)
                     })
                 },
                 '.7z': () => {
@@ -22,14 +23,14 @@ module.exports = {
                         if (error) {
                             return reject(error)
                         }
-                        resolve()
+                        resolve(targetDir)
                     })
                 },
             }
             const extension = path.parse(sourcePath).ext
             const extractFunction = extensions[extension]
             if (extractFunction) {
-                return extractFunction()
+                extractFunction()
             } else {
                 reject('Unhandled extension: ' + extension)
             }
