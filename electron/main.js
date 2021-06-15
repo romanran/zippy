@@ -5,18 +5,12 @@ const path = require('path')
 
 const { handleFile } = require('./system-handlers/app')
 const { saveLog } = require('./utilities/log')
+const { addIpcHandlers } = require('./service/ipc')
+
 const isDev = process.env.NODE_ENV === 'development'
 const unzipPath = path.parse(process.argv[1])
-if (unzipPath.base !== 'main.js' && unzipPath.ext) {
-    handleFile(process.argv[1])
-        .then(() => {
-            app.quit()
-        })
-        .catch((error) => {
-            saveLog('ERROR', 'handling-file', error)
-            app.quit()
-        })
-} else {
+
+if (unzipPath.base === '.' || unzipPath.base === 'zippy') {
     let win
     require('electron-reload')(__dirname, {
         electron: path.join(process.cwd(), 'node_modules', '.bin', 'electron.cmd'),
@@ -38,7 +32,8 @@ if (unzipPath.base !== 'main.js' && unzipPath.ext) {
             width: 1600,
             height: 1000,
             webPreferences: {
-                nodeIntegration: true,
+                sandbox: false,
+                nodeIntegration: false,
                 contextIsolation: true,
                 preload: path.join(__dirname, 'preload.js'),
             },
@@ -73,12 +68,15 @@ if (unzipPath.base !== 'main.js' && unzipPath.ext) {
             })
         }
     }
-}
 
-const Store = require('electron-store')
-const { readDir } = require('./service/browser')
-const storage = new Store()
-ipcMain.handle('readDir', async (event, payload) => {
-    const response = await readDir(payload.dir, payload.filterZipFiles)
-    return response
-})
+    addIpcHandlers()
+} else {
+    handleFile(process.argv[1])
+        .then(() => {
+            app.quit()
+        })
+        .catch((error) => {
+            saveLog('ERROR', 'handling-file', error)
+            app.quit()
+        })
+}
