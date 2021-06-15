@@ -1,5 +1,3 @@
-const saveLog = require('./log')
-
 module.exports = {
     extractArchive(sourcePath, targetDir) {
         const path = require('path')

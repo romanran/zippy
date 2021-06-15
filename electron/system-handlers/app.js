@@ -10,5 +10,5 @@ module.exports = {
         } catch (error) {
             saveLog('ERROR', 'extraction', error)
         }
-    }
+    },
 }
