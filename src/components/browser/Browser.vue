@@ -67,9 +67,9 @@ export default {
             readDir(path) {
                 store.dispatch('browser/readDir', path)
             },
-            rename() {},
+            rename() {}
         }
-    },
+    }
 }
 </script>
 

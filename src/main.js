@@ -11,11 +11,11 @@ const router = createRouter({
         {
             path: '/',
             name: 'landing-page',
-            component: LandingPage,
-        },
-    ],
+            component: LandingPage
+        }
+    ]
 })
 const app = createApp(App)
 app.use(store)
-app.use(router)
-app.mount('#app')
+    .use(router)
+    .mount('#app')

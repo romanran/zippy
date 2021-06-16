@@ -1,24 +1,15 @@
 module.exports = {
-    publicPath: '',
     pluginOptions: {
         electronBuilder: {
-            nodeIntegration: true,
-            removeElectronJunk: false,
+            preload: 'src/electron/preload.js',
+            mainProcessFile: 'src/electron/background.js',
             builderOptions: {
                 appId: 'com.zippy.app',
                 productName: 'zippy',
                 win: {
-                    icon: './public/zippy.ico',
-                },
-            },
-        },
-    },
-    configureWebpack: {
-        devtool: 'source-map',
-        output: {
-            // The filenames need to have a ./ otherwise Electron won't be able to find the files.
-            filename: './[name].js',
-            chunkFilename: './[name].js',
-        },
-    },
+                    icon: './public/zippy.ico'
+                }
+            }
+        }
+    }
 }

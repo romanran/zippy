@@ -4,7 +4,7 @@ function getDirPattern(isInsideArchive, filterZip = true) {
     if (!isInsideArchive) {
         pattern = '*(!(*.*)'
         if (filterZip) {
-            'rar, zip, 7z'.split(', ').forEach((ext) => (pattern += `|*.${ext}`))
+            'rar, zip, 7z'.split(', ').forEach(ext => (pattern += `|*.${ext}`))
         } else {
             pattern += '|*.*'
         }
@@ -33,7 +33,7 @@ function getDirectoryFiles(dir, filterZipFiles, openedArchive) {
 
     return new Promise((resolve, reject) => {
         glob(getDirPattern(openedArchive, filterZipFiles), { cwd: dir }, async (error, newFiles) => {
-            files = await Promise.all(newFiles.map(async (file) => await getFileStats(file, dir)))
+            files = await Promise.all(newFiles.map(async file => await getFileStats(file, dir)))
             if (error) {
                 reject(error)
             }
@@ -45,7 +45,6 @@ function getDirectoryFiles(dir, filterZipFiles, openedArchive) {
 async function readDir(targetDir, filterZipFiles, openedArchive) {
     const path = require('path')
     const fs = require('fs-extra')
-
     if (openedArchive) {
         if (targetDir.search(openedArchive) < 0) {
             openedArchive = false
@@ -76,5 +75,5 @@ async function readDir(targetDir, filterZipFiles, openedArchive) {
 }
 
 module.exports = {
-    readDir,
+    readDir
 }

@@ -1,4 +1,4 @@
-# vue3-electron
+# vue3-empty
 
 ## Project setup
 ```
