@@ -1,10 +1,11 @@
+const { CLIEngine } = require('eslint')
 const { saveLog } = require('../utilities/log')
 function getDirPattern(isInsideArchive, filterZip = true) {
     let pattern = '*'
     if (!isInsideArchive) {
         pattern = '*(!(*.*)'
         if (filterZip) {
-            'rar, zip, 7z'.split(', ').forEach(ext => (pattern += `|*.${ext}`))
+            'rar, zip, 7z'.split(', ').forEach((ext) => (pattern += `|*.${ext}`))
         } else {
             pattern += '|*.*'
         }
@@ -33,7 +34,7 @@ function getDirectoryFiles(dir, filterZipFiles, openedArchive) {
 
     return new Promise((resolve, reject) => {
         glob(getDirPattern(openedArchive, filterZipFiles), { cwd: dir }, async (error, newFiles) => {
-            files = await Promise.all(newFiles.map(async file => await getFileStats(file, dir)))
+            files = await Promise.all(newFiles.map(async (file) => await getFileStats(file, dir)))
             if (error) {
                 reject(error)
             }
@@ -41,9 +42,31 @@ function getDirectoryFiles(dir, filterZipFiles, openedArchive) {
         })
     })
 }
+async function handleFile(fileDir, filterZipFiles) {
+    const path = require('path')
+    const { handledExtensions } = require('../utilities/service')
+
+    const fileExtension = path.extname(fileDir)
+    if (Object.values(handledExtensions).includes(fileExtension)) {
+        try {
+            const archiveDir = await openFile(fileDir)
+            const targetDirParsed = path.parse(fileDir)
+            return await readDir(archiveDir, filterZipFiles, `${targetDirParsed.name}${targetDirParsed.ext}`)
+        } catch (error) {
+            saveLog('ERROR', 'open-file', error)
+            return error
+        }
+    } else {
+        const shell = require('electron').shell
+
+        shell.openPath(fileDir)
+        return {
+            handledDefault: true,
+        }
+    }
+}
 
 async function readDir(targetDir, filterZipFiles, openedArchive) {
-    const path = require('path')
     const fs = require('fs-extra')
     if (openedArchive) {
         if (targetDir.search(openedArchive) < 0) {
@@ -51,29 +74,24 @@ async function readDir(targetDir, filterZipFiles, openedArchive) {
         }
     }
     // --If target directory is a file
-    const stat = await fs.stat(targetDir)
-    const isFile = stat.isFile()
+    const targetStat = await fs.stat(targetDir)
+    const isFile = targetStat.isFile()
     if (isFile) {
-        try {
-            const archiveDir = await openFile(targetDir)
-            const targetDirParsed = path.parse(targetDir)
-            return await readDir(archiveDir, filterZipFiles, `${targetDirParsed.name}${targetDirParsed.ext}`)
-        } catch (error) {
-            saveLog('ERROR', 'open-file', error)
-        }
+        return await handleFile(targetDir, filterZipFiles)
     } else {
         // --
-        let files
+        let files, error
 
         try {
             files = await getDirectoryFiles(targetDir, filterZipFiles, openedArchive)
-        } catch (error) {
-            saveLog('ERROR', 'glob-read', error)
+        } catch (dirError) {
+            error = dirError
+            saveLog('ERROR', 'glob-read', dirError)
         }
-        return { files, targetDir }
+        return { files, targetDir, error }
     }
 }
 
 module.exports = {
-    readDir
+    readDir,
 }

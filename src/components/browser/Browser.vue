@@ -1,6 +1,6 @@
 <template>
     <div class="browser">
-        <drive-list class="browser__drivelist" :drives="drives" :loading="loadingDrives" @click="readDir" />
+        <sidebar class="browser__sidebar" :drives="drives" :loading="loadingDrives" @click="readDir" />
         <main class="browser__main" :class="{ loading: loading }">
             <div class="section">
                 <filter-bar @previous="readDir(previousDir)" @filter="readDir(currentDir)" />
@@ -35,14 +35,14 @@
 </template>
 
 <script>
-import DriveList from './components/DriveList.vue'
+import Sidebar from './components/Sidebar.vue'
 import FilterBar from './components/FilterBar.vue'
 import Loader from './components/Loader.vue'
 import File from './components/File.vue'
 import { computed } from 'vue'
 import { useStore } from 'vuex'
 export default {
-    components: { Loader, DriveList, FilterBar, File },
+    components: { Loader, Sidebar, FilterBar, File },
     setup() {
         const store = useStore()
 
@@ -67,9 +67,9 @@ export default {
             readDir(path) {
                 store.dispatch('browser/readDir', path)
             },
-            rename() {}
+            rename() {},
         }
-    }
+    },
 }
 </script>
 
@@ -81,7 +81,7 @@ export default {
         background: fade(black, 10%);
     }
 }
-.browser__drivelist {
+.browser__sidebar {
     display: inline-block;
     vertical-align: top;
     width: 150px;

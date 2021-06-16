@@ -16,8 +16,8 @@ const unzipPath = path.parse(process.argv[1])
 if (unzipPath.base === 'dist_electron' || unzipPath.base === 'zippy') {
     async function createWindow() {
         const win = new BrowserWindow({
-            width: 800,
-            height: 600,
+            width: 1600,
+            height: 1000,
             webPreferences: {
                 nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,
                 contextIsolation: !process.env.ELECTRON_NODE_INTEGRATION,

@@ -1,7 +1,9 @@
 {
-    "name": "vue3-empty",
+    "name": "zippy",
     "version": "0.1.0",
     "private": true,
+    "author": "Roman Ranniew",
+    "description": "Modern archives manager",
     "scripts": {
         "serve": "vue-cli-service serve",
         "build": "vue-cli-service build",
