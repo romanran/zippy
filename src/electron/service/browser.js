@@ -1,15 +1,14 @@
-const { CLIEngine } = require('eslint')
 const { saveLog } = require('../utilities/log')
 function getDirPattern(isInsideArchive, filterZip = true) {
-    let pattern = '*'
+    let pattern = ''
     if (!isInsideArchive) {
-        pattern = '*(!(*.*)'
         if (filterZip) {
+            pattern = '*(!(*.*)'
             'rar, zip, 7z'.split(', ').forEach((ext) => (pattern += `|*.${ext}`))
+            pattern += ')'
         } else {
-            pattern += '|*.*'
+            pattern = `*(!($RECYCLE.BIN))`
         }
-        pattern = pattern + ')'
     }
     return pattern
 }
@@ -35,6 +34,7 @@ function getDirectoryFiles(dir, filterZipFiles, openedArchive) {
     return new Promise((resolve, reject) => {
         glob(getDirPattern(openedArchive, filterZipFiles), { cwd: dir }, async (error, newFiles) => {
             files = await Promise.all(newFiles.map(async (file) => await getFileStats(file, dir)))
+            files = files.filter((file) => !!file)
             if (error) {
                 reject(error)
             }

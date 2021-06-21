@@ -4,14 +4,14 @@ function getDisplayStats(stats) {
 
     return {
         size: stats.size ? prettyBytes(stats.size) : '',
-        time: format(stats.mtime, 'yyyy/MM/dd HH:mm')
+        time: format(stats.mtime, 'yyyy/MM/dd HH:mm'),
     }
 }
 module.exports = {
     async getFileStats(file, currentDir) {
         if (file === '../') {
             return {
-                type: ''
+                type: '',
             }
         }
         const path = require('path')
@@ -28,20 +28,16 @@ module.exports = {
                 type: data.isDirectory() ? 'folder' : 'storage',
                 name: file,
                 data: dataStats,
-                hidden: 0,
                 fullPath: fullPath,
-                display: getDisplayStats(data)
+                display: getDisplayStats(data),
             }
         } catch (err) {
             console.warn(err)
-            return {
-                type: 'lock',
-                hidden: true
-            }
+            return null
         }
     },
     getDisplayStats,
     renameDir(file) {
         console.log(file)
-    }
+    },
 }
