@@ -37,6 +37,7 @@ export default {
             }
             context.commit('previousDir', context.state.currentDir)
             context.commit('loading', true)
+            console.log(dir)
             const response = await window.api.readDir({ dir, filterZipFiles: context.state.filterZipFiles })
             if (!response.handledDefault) {
                 context.commit('files', response.files)
@@ -49,6 +50,16 @@ export default {
             const { orderBy } = require('lodash')
 
             context.commit('files', orderBy(context.rootState.browser.files, payload))
+        },
+        unzip(context, payload) {
+            payload.paths.forEach(async (path) => {
+                const response = await window.api.unzip({ dir: path })
+                console.log(response)
+            })
+        },
+        async getCWD(context) {
+            const dir = await window.api.readStore({ name: 'cwd' })
+            context.commit('currentDir', dir)
         },
     },
 }

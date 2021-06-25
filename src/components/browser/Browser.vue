@@ -1,7 +1,7 @@
 <template>
     <div class="browser">
         <sidebar class="browser__sidebar" :drives="drives" :loading="loadingDrives" @click="readDir" />
-        <main class="browser__main" :class="{ loading: loading }">
+        <main class="browser__main" :class="{ loading: loading }" @click="select($event, null)" @contextmenu="onRightClick">
             <div class="section">
                 <filter-bar @previous="readDir(previousDir)" @filter="readDir(currentDir)" />
                 <div class="divider"></div>
@@ -13,7 +13,7 @@
                             :key="file.name"
                             :selected="checkIfSelected(file.fullPath)"
                             :file="file"
-                            @click="select($event, file.fullPath)"
+                            @click.stop="select($event, file.fullPath)"
                             @doubleClick="readDir(file.fullPath)"
                         >
                         </file>
@@ -21,15 +21,9 @@
                 </div>
             </div>
         </main>
+
         <loader class="browser__loader" :loading="loading"></loader>
-        <!-- <vue-context ref="menu">
-            <template v-slot:default="{ child }">
-                <ul>
-                    <li @click="rename(child.data)">Rename</li>
-                    <li v-if="child.data && child.data.type === 'storage'" @click="unzip($event, child.data)">Unzip</li>
-                </ul>
-            </template>
-        </vue-context> -->
+        <context-menu :position="contextMenuCoords" :selectedFiles="selectedFiles" v-show="contextMenuOpen" @change="contextClick" />
         <div class="modal">
             <div class="modal-content">
                 <input type="text" />
@@ -49,6 +43,7 @@ import Loader from './components/Loader.vue'
 import File from './components/File.vue'
 import { computed, onUnmounted, ref } from 'vue'
 import { useStore } from 'vuex'
+import ContextMenu from './components/ContextMenu.vue'
 
 const keys = {
     ctrl: 'Control',
@@ -57,12 +52,14 @@ const keys = {
 }
 
 export default {
-    components: { Loader, Sidebar, FilterBar, File },
+    components: { Loader, Sidebar, FilterBar, File, ContextMenu },
 
     setup() {
         const store = useStore()
         let selectedFiles = ref([])
         const heldKey = ref(null)
+        const contextMenuOpen = ref(false)
+        const contextMenuCoords = ref({ x: 0, y: 0 })
 
         const loadingDrives = computed(() => store.state.browser.loadingDrives)
         const loading = computed(() => store.state.browser.loading)
@@ -75,6 +72,10 @@ export default {
         const previousDirExists = computed(() => store.state.browser.previousDirExists)
 
         function handleKeyEvent(ev) {
+            if (ev.key === 'F2' && selectedFilesPaths.value.length === 1) {
+                rename()
+                return
+            }
             if (ev.key !== keys.shift && ev.key !== keys.ctrl) {
                 return
             }
@@ -95,15 +96,18 @@ export default {
             }
             return files.value.slice(firstSelectedFileIndex, secondSelectedFileIndex + 1)
         }
-
-        store.dispatch('browser/getDrives')
-        store.dispatch('browser/readDir')
+        async function init() {
+            store.dispatch('browser/getDrives')
+            await store.dispatch('browser/getCWD')
+            store.dispatch('browser/readDir', currentDir.value)
+        }
         window.addEventListener('keydown', handleKeyEvent)
         window.addEventListener('keyup', handleKeyEvent)
         onUnmounted(() => {
             window.removeEventListener('keydown', handleKeyEvent)
             window.removeEventListener('keyup', handleKeyEvent)
         })
+        init()
 
         return {
             loadingDrives,
@@ -116,10 +120,16 @@ export default {
             selectedFiles,
             selectedFilesPaths,
             previousDirExists,
+            contextMenuOpen,
+            contextMenuCoords,
             checkIfSelected(path) {
                 return selectedFilesPaths.value.includes(path)
             },
             select(event, path) {
+                contextMenuOpen.value = false
+                if (path === null) {
+                    return (selectedFiles.value = [])
+                }
                 const actions = {
                     [keys.ctrl](path) {
                         const { pullAt, cloneDeep } = require('lodash')
@@ -128,7 +138,6 @@ export default {
                         const isSelected = selectedFilePathIndex >= 0
                         if (isSelected) {
                             const selectedFilesCopy = cloneDeep(selectedFiles.value)
-                            // console.log(...filesCopy, 'selected', path, selectedFilePathIndex)
                             pullAt(selectedFilesCopy, selectedFilePathIndex)
                             selectedFiles.value = selectedFilesCopy
                         } else {
@@ -151,7 +160,23 @@ export default {
             readDir(path) {
                 store.dispatch('browser/readDir', path)
             },
-            rename() {},
+            onRightClick(ev) {
+                contextMenuCoords.value = { x: ev.pageX, y: ev.pageY }
+                contextMenuOpen.value = true
+            },
+            contextClick(eventName) {
+                contextMenuOpen.value = false
+
+                const eventFunctions = {
+                    zip() {
+                        console.log('zip', selectedFiles.value)
+                    },
+                    unzip() {
+                        store.dispatch('browser/unzip', { paths: selectedFilesPaths.value })
+                    },
+                }
+                eventFunctions[eventName] ? eventFunctions[eventName]() : null
+            },
         }
     },
 }
@@ -180,6 +205,7 @@ export default {
     display: inline-block;
     vertical-align: top;
     width: calc(100% - 150px);
+    height: 100vh;
     opacity: 1;
     z-index: 1;
     position: relative;

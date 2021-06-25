@@ -1,6 +1,6 @@
 <template>
     <li class="truncate file" :class="{ 'file--selected': selected }" @dblclick="$emit('doubleClick')">
-        <div class="file__col icon"><i class="material-icons left" v-text="file.type" v-if="file.type"></i></div>
+        <div class="file__col icon"><i class="material-icons left" v-text="icon" v-if="file.type"></i></div>
         <div class="file__col name">
             <span>{{ file.name }}</span>
         </div>
@@ -13,10 +13,24 @@
     </li>
 </template>
 <script>
+import { computed } from 'vue'
 export default {
     props: {
         file: Object,
         selected: Boolean,
+    },
+    setup(props) {
+        const icon = computed(() => {
+            const icons = {
+                archive: 'storage',
+                folder: 'folder',
+                file: 'file',
+            }
+            return icons[props.file.type]
+        })
+        return {
+            icon,
+        }
     },
 }
 </script>

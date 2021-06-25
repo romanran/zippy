@@ -14,7 +14,6 @@ module.exports = {
                     const extract = require('extract-zip')
 
                     extract(sourcePath, { dir: targetDir }, (error) => {
-                        console.log('aaa poszlo zip', error)
                         if (error) {
                             return reject(error)
                         }
@@ -40,4 +39,5 @@ module.exports = {
             }
         })
     },
+    createArchive(paths) {},
 }

@@ -1,5 +1,5 @@
 const glob = require('glob')
-const electronFiles = 'service/browser.js, service/ipc.js, utilities/file/utilities/service.js'
+const electronFiles = 'service/browser.js, service/ipc.js, utilities/file.js, /utilities/service.js'
 module.exports = {
     pluginOptions: {
         electronBuilder: {
