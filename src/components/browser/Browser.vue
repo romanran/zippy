@@ -14,6 +14,7 @@
                             :selected="checkIfSelected(file.fullPath)"
                             :file="file"
                             @click.stop="select($event, file.fullPath)"
+                            @contextmenu="select($event, file.fullPath)"
                             @doubleClick="readDir(file.fullPath)"
                         >
                         </file>
@@ -173,6 +174,9 @@ export default {
                     },
                     unzip() {
                         store.dispatch('browser/unzip', { paths: selectedFilesPaths.value })
+                    },
+                    delete() {
+                        store.dispatch('browser/delete', { paths: selectedFilesPaths.value })
                     },
                 }
                 eventFunctions[eventName] ? eventFunctions[eventName]() : null

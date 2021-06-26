@@ -15,4 +15,9 @@ module.exports = {
             },
         },
     },
+    configureWebpack: {
+        node: {
+            __dirname: false,
+        },
+    },
 }

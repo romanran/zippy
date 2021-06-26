@@ -3,9 +3,10 @@
         <div class="context-menu z-depth-3" :style="{ left: `${position.x}px`, top: `${position.y}px` }">
             <ul>
                 <li class="context-menu__item" v-show="selectedFiles.length > 1" @click="$emit('change', 'zip')">Zip</li>
-                <li class="context-menu__item" v-show="selectedFiles.length === 1" @click="$emit('change', 'rename')">Rename</li>
                 <li class="context-menu__item" v-show="hasArchive" @click="$emit('change', 'unzip')">Unzip</li>
+                <li class="context-menu__item" v-show="selectedFiles.length === 1" @click="$emit('change', 'rename')">Rename</li>
                 <li class="context-menu__item" v-show="selectedFiles.length === 0" @click="$emit('change', 'new')">New folder</li>
+                <li class="context-menu__item" @click="$emit('change', 'delete')">Delete</li>
             </ul>
         </div>
     </div>
@@ -25,7 +26,6 @@ export default {
         },
     },
     setup(props) {
-        console.log(props.selectedFiles)
         const hasArchive = computed(() => !!props.selectedFiles.find((file) => file.type === 'archive'))
         return {
             hasArchive,

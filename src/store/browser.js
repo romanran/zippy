@@ -37,13 +37,18 @@ export default {
             }
             context.commit('previousDir', context.state.currentDir)
             context.commit('loading', true)
-            console.log(dir)
-            const response = await window.api.readDir({ dir, filterZipFiles: context.state.filterZipFiles })
+            const response = await window.api.readDir({ dir })
             if (!response.handledDefault) {
                 context.commit('files', response.files)
                 context.commit('previousDirExists', path.dirname(dir) !== dir)
                 context.commit('currentDir', dir)
             }
+            window.api.dirWatcher({
+                dir,
+                callback: (response) => {
+                    context.commit('files', response.files)
+                },
+            })
             context.commit('loading', false)
         },
         sortFiles(context, payload) {
@@ -51,11 +56,11 @@ export default {
 
             context.commit('files', orderBy(context.rootState.browser.files, payload))
         },
-        unzip(context, payload) {
-            payload.paths.forEach(async (path) => {
-                const response = await window.api.unzip({ dir: path })
-                console.log(response)
-            })
+        async unzip(context, payload) {
+            await window.api.unzip(payload)
+        },
+        async delete(context, payload) {
+            await window.api.delete(payload)
         },
         async getCWD(context) {
             const dir = await window.api.readStore({ name: 'cwd' })

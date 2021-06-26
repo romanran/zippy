@@ -1,17 +1,5 @@
 const { saveLog } = require('../utilities/log')
-function getDirPattern(isInsideArchive, filterZip = true) {
-    let pattern = ''
-    if (!isInsideArchive) {
-        if (filterZip) {
-            pattern = '*(!(*.*)'
-            'rar, zip, 7z'.split(', ').forEach((ext) => (pattern += `|*.${ext}`))
-            pattern += ')'
-        } else {
-            pattern = `*(!($RECYCLE.BIN))`
-        }
-    }
-    return pattern
-}
+
 async function openFile(filePath) {
     const fs = require('fs-extra')
     const path = require('path')
@@ -27,12 +15,12 @@ async function openFile(filePath) {
     }
 }
 
-function getDirectoryFiles(dir, filterZipFiles, openedArchive) {
+function getDirectoryFiles(dir, openedArchive) {
     const { getFileStats } = require('../utilities/file')
     const glob = require('glob')
 
     return new Promise((resolve, reject) => {
-        glob(getDirPattern(openedArchive, filterZipFiles), { cwd: dir }, async (error, newFiles) => {
+        glob(`*(!($RECYCLE.BIN))`, { cwd: dir }, async (error, newFiles) => {
             files = await Promise.all(newFiles.map(async (file) => await getFileStats(file, dir)))
             files = files.filter((file) => !!file)
             if (error) {
@@ -42,7 +30,7 @@ function getDirectoryFiles(dir, filterZipFiles, openedArchive) {
         })
     })
 }
-async function handleFile(fileDir, filterZipFiles) {
+async function handleFile(fileDir) {
     const path = require('path')
     const { handledExtensions } = require('../utilities/service')
 
@@ -51,7 +39,7 @@ async function handleFile(fileDir, filterZipFiles) {
         try {
             const archiveDir = await openFile(fileDir)
             const targetDirParsed = path.parse(fileDir)
-            return await readDir(archiveDir, filterZipFiles, `${targetDirParsed.name}${targetDirParsed.ext}`)
+            return await readDir(archiveDir, `${targetDirParsed.name}${targetDirParsed.ext}`)
         } catch (error) {
             saveLog('ERROR', 'open-file', error)
             return error
@@ -66,7 +54,7 @@ async function handleFile(fileDir, filterZipFiles) {
     }
 }
 
-async function readDir(targetDir, filterZipFiles, openedArchive) {
+async function readDir(targetDir, openedArchive) {
     const fs = require('fs-extra')
     if (openedArchive) {
         if (targetDir.search(openedArchive) < 0) {
@@ -77,13 +65,13 @@ async function readDir(targetDir, filterZipFiles, openedArchive) {
     const targetStat = await fs.stat(targetDir)
     const isFile = targetStat.isFile()
     if (isFile) {
-        return await handleFile(targetDir, filterZipFiles)
+        return await handleFile(targetDir)
     } else {
         // --
         let files, error
 
         try {
-            files = await getDirectoryFiles(targetDir, filterZipFiles, openedArchive)
+            files = await getDirectoryFiles(targetDir, openedArchive)
         } catch (dirError) {
             error = dirError
             saveLog('ERROR', 'glob-read', dirError)
