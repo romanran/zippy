@@ -73,6 +73,10 @@ export default {
         const previousDirExists = computed(() => store.state.browser.previousDirExists)
 
         function handleKeyEvent(ev) {
+            if (ev.key === 'Delete') {
+                store.dispatch('browser/delete', { paths: selectedFilesPaths.value })
+                return
+            }
             if (ev.key === 'F2' && selectedFilesPaths.value.length === 1) {
                 rename()
                 return
@@ -132,7 +136,6 @@ export default {
                     return (selectedFiles.value = [])
                 }
                 if (event.type === 'contextmenu' && selectedFiles.value.length > 1) {
-                    console.log(event)
                     return
                 }
                 const actions = {
@@ -174,7 +177,7 @@ export default {
 
                 const eventFunctions = {
                     zip() {
-                        console.log('zip', selectedFiles.value)
+                        store.dispatch('browser/zip', { paths: selectedFilesPaths.value, password: null })
                     },
                     unzip() {
                         store.dispatch('browser/unzip', { paths: selectedFilesPaths.value })

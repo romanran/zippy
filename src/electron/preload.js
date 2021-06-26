@@ -3,8 +3,12 @@
 const { contextBridge, ipcRenderer } = require('electron')
 
 const { handlers } = require('./service/ipc')
-// In this file we want to expose protected methods that allow the renderer
-// process to use the ipcRenderer without exposing the entire object.
+
+/****************************************************************
+ * Auto-creates window.api[handleName] handlers
+ *
+ *
+ * *************/
 const apiFunctions = Object.keys(handlers).reduce((reducer, key) => {
     reducer[key] = (payload) => ipcRenderer.invoke(key, payload)
     return reducer

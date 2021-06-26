@@ -2,7 +2,7 @@ const Store = require('electron-store')
 const { readDir } = require('./browser')
 const storage = new Store()
 const { ipcMain, MessageChannelMain } = require('electron')
-const { extractArchive } = require('../utilities/service')
+const { extractArchive, createArchive } = require('../utilities/service')
 
 let dirWatcher
 const handlers = {
@@ -18,11 +18,11 @@ const handlers = {
         const path = require('path')
         const targetDir = path.parse(payload.paths[0])
         payload.paths.forEach((path) => {
-            extractArchive(path, targetDir.dir)
+            extractArchive(path, targetDir.dir, payload.password)
         })
     },
     zip(event, payload) {
-        return payload
+        return createArchive(payload.paths, payload.password)
     },
     delete(event, payload) {
         const fs = require('fs-extra')
@@ -40,11 +40,13 @@ module.exports = {
         })
         ipcMain.handle('watchDir', (event, payload) => {
             const fs = require('fs')
+            const { debounce } = require('lodash')
             dirWatcher && dirWatcher.close()
-            dirWatcher = fs.watch(payload.dir, {}, async (a, b) => {
+            const watcherCallback = async (a, b) => {
                 const paths = await readDir(payload.dir)
                 win.webContents.send('dirChange', paths)
-            })
+            }
+            dirWatcher = fs.watch(payload.dir, {}, debounce(watcherCallback, 33))
         })
     },
 }

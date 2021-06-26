@@ -59,6 +59,9 @@ export default {
         async unzip(context, payload) {
             await window.api.unzip(payload)
         },
+        async zip(context, payload) {
+            await window.api.zip(payload)
+        },
         async delete(context, payload) {
             await window.api.delete(payload)
         },
