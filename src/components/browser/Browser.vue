@@ -131,6 +131,10 @@ export default {
                 if (path === null) {
                     return (selectedFiles.value = [])
                 }
+                if (event.type === 'contextmenu' && selectedFiles.value.length > 1) {
+                    console.log(event)
+                    return
+                }
                 const actions = {
                     [keys.ctrl](path) {
                         const { pullAt, cloneDeep } = require('lodash')

@@ -2,7 +2,6 @@ const handledExtensions = {
     ZIP: '.zip',
     SEVENZIP: '.7z',
 }
-
 module.exports = {
     handledExtensions,
     extractArchive(sourcePath, targetDir) {
@@ -20,14 +19,15 @@ module.exports = {
                         resolve(targetDir)
                     })
                 },
-                [handledExtensions.SEVENZIP]: () => {
-                    const _7z = require('7zip-min')
-                    _7z.unpack(sourcePath, targetDir, (error) => {
-                        if (error) {
-                            return reject(error)
-                        }
-                        resolve(targetDir)
+                [handledExtensions.SEVENZIP]: async () => {
+                    const sevenBin = require('7zip-bin')
+                    const { extractFull } = require('node-7z')
+
+                    const pathTo7zip = sevenBin.path7za
+                    await extractFull(sourcePath, targetDir, {
+                        $bin: pathTo7zip,
                     })
+                    resolve(targetDir)
                 },
             }
             const extension = path.parse(sourcePath).ext
