@@ -1,7 +1,7 @@
 const Store = require('electron-store')
 const { readDir } = require('./browser')
 const storage = new Store()
-const { ipcMain, MessageChannelMain } = require('electron')
+const { ipcMain } = require('electron')
 const { extractArchive, createArchive } = require('../utilities/service')
 
 let dirWatcher
@@ -22,7 +22,7 @@ const handlers = {
         })
     },
     zip(event, payload) {
-        return createArchive(payload.paths, payload.password)
+        return createArchive(payload.paths, payload.extension, payload.password)
     },
     delete(event, payload) {
         const fs = require('fs-extra')

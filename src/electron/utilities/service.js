@@ -2,8 +2,7 @@ const handledExtensions = {
     ZIP: '.zip',
     SEVENZIP: '.7z',
 }
-const archiver = require('archiver')
-archiver.registerFormat('zip-encrypted', require('archiver-zip-encrypted'))
+
 module.exports = {
     handledExtensions,
     extractArchive(sourcePath, targetDir, password) {
@@ -41,16 +40,20 @@ module.exports = {
             }
         })
     },
-    createArchive(paths, password) {
+    createArchive(paths, extension, password) {
         return new Promise((resolve, reject) => {
+            const path = require('path')
+            const targetDir = path.parse(paths[0]).dir
+            const dirArray = targetDir.split('\\')
+            const zipPath = `${targetDir}\\${dirArray[dirArray.length - 1]}${extension}`
+
             const extensions = {
                 [handledExtensions.ZIP]: async () => {
+                    const archiver = require('archiver')
+                    archiver.registerFormat('zip-encrypted', require('archiver-zip-encrypted'))
+
                     const fs = require('fs-extra')
-                    const path = require('path')
-                    const { last } = require('lodash')
-                    const targetDir = path.parse(paths[0]).dir
-                    const dirArray = targetDir.split('\\')
-                    const output = fs.createWriteStream(`${targetDir}\\${dirArray[dirArray.length - 1]}.zip`)
+                    const output = fs.createWriteStream(zipPath)
                     output.on('end', () => resolve())
                     let archive
                     if (password) {
@@ -67,10 +70,14 @@ module.exports = {
                 },
                 [handledExtensions.SEVENZIP]: async () => {
                     const sevenBin = require('7zip-bin')
-                    const { extractFull } = require('node-7z')
+                    const { add } = require('node-7z')
+                    const pathTo7zip = sevenBin.path7za
+                    await add(zipPath, paths, {
+                        $bin: pathTo7zip,
+                        password: password ? password : undefined,
+                    })
                 },
             }
-            const extension = '.zip'
             const zipFunction = extensions[extension]
             if (zipFunction) {
                 zipFunction()

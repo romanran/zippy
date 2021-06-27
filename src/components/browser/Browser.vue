@@ -45,6 +45,7 @@ import File from './components/File.vue'
 import { computed, onUnmounted, ref } from 'vue'
 import { useStore } from 'vuex'
 import ContextMenu from './components/ContextMenu.vue'
+import { handledExtensions } from '@/electron/utilities/service.js'
 
 const keys = {
     ctrl: 'Control',
@@ -177,7 +178,7 @@ export default {
 
                 const eventFunctions = {
                     zip() {
-                        store.dispatch('browser/zip', { paths: selectedFilesPaths.value, password: null })
+                        store.dispatch('browser/zip', { paths: selectedFilesPaths.value, extension: handledExtensions.SEVENZIP, password: null })
                     },
                     unzip() {
                         store.dispatch('browser/unzip', { paths: selectedFilesPaths.value })
