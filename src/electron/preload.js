@@ -3,6 +3,7 @@
 const { contextBridge, ipcRenderer } = require('electron')
 
 const { handlers } = require('./service/ipc')
+const remote = require('electron').remote
 
 /****************************************************************
  * Auto-creates window.api[handleName] handlers
@@ -25,5 +26,8 @@ contextBridge.exposeInMainWorld('api', {
             payload.callback(data)
         }
         ipcRenderer.on('dirChange', watchDir)
+    },
+    closeWindow() {
+        remote.getCurrentWindow().close()
     },
 })

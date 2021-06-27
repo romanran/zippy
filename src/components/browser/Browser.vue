@@ -1,5 +1,15 @@
 <template>
-    <div class="browser" ref="browserElement" @click="onBrowserClick" @mousemove="onMouseMove" @mousedown="onMouseDown">
+    <div
+        class="browser"
+        ref="browserElement"
+        @click="onBrowserClick"
+        @mousemove="onMouseMove"
+        @mousedown="onMouseDown"
+        @drop="onDrop"
+        @dragenter.prevent
+        @dragover.prevent
+    >
+        <div @click="closeWindow">ZAMKNIJ OKNO</div>
         <sidebar class="browser__sidebar" :drives="drives" :loading="loadingDrives" @click="readDir" />
         <main class="browser__main" :class="{ loading: loading }" @contextmenu="onRightClick">
             <div class="section">
@@ -227,6 +237,16 @@ export default {
             },
             onMouseDown(ev) {
                 isMoving.value = false
+            },
+            closeWindow() {
+                window.api.closeWindow()
+            },
+            onDrop(ev) {
+                const { toArray } = require('lodash')
+                const files = toArray(ev.dataTransfer.files)
+                console.log(files)
+                const paths = files.map((file) => file.path)
+                store.dispatch('browser/move', { paths, targetDir: currentDir.value })
             },
         }
     },

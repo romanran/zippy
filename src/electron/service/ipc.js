@@ -30,6 +30,18 @@ const handlers = {
             fs.remove(path)
         })
     },
+    async move(event, payload) {
+        const fs = require('fs-extra')
+        const path = require('path')
+
+        const moves = payload.paths.map(async (filePath) => {
+            const pathParsed = path.parse(filePath)
+            console.log(filePath, pathParsed)
+            const targetPath = `${payload.targetDir}/${pathParsed.name}${pathParsed.ext}`
+            return await fs.move(filePath, targetPath)
+        })
+        await Promise.all(moves)
+    },
 }
 
 module.exports = {

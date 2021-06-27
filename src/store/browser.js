@@ -65,6 +65,9 @@ export default {
         async delete(context, payload) {
             await window.api.delete(payload)
         },
+        async move(context, payload) {
+            await window.api.move(payload)
+        },
         async getCWD(context) {
             const dir = await window.api.readStore({ name: 'cwd' })
             context.commit('currentDir', dir)
