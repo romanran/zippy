@@ -1,12 +1,15 @@
 const handledExtensions = {
     ZIP: '.zip',
     SEVENZIP: '.7z',
+    RAR: '.rar',
 }
 
 module.exports = {
     handledExtensions,
     extractArchive(sourcePath, targetDir, password) {
         const path = require('path')
+        let zipName = path.parse(sourcePath).name
+        let zipTargetDir = `${targetDir}/${zipName}`
 
         return new Promise((resolve, reject) => {
             const extensions = {
@@ -16,7 +19,7 @@ module.exports = {
                     const directory = await unzipper.Open.file(sourcePath)
                     directory.files.forEach(async (file) => {
                         const extracted = password ? await file.buffer(password) : await file.buffer()
-                        fs.writeFile(`${targetDir}/${file.path}`, extracted)
+                        fs.writeFile(`${zipTargetDir}/${file.path}`, extracted)
                     })
                 },
                 [handledExtensions.SEVENZIP]: async () => {
@@ -24,11 +27,11 @@ module.exports = {
                     const { extractFull } = require('node-7z')
 
                     const pathTo7zip = sevenBin.path7za
-                    await extractFull(sourcePath, targetDir, {
+                    await extractFull(sourcePath, zipTargetDir, {
                         $bin: pathTo7zip,
                         password,
                     })
-                    resolve(targetDir)
+                    resolve(zipDir)
                 },
             }
             const extension = path.parse(sourcePath).ext
@@ -66,7 +69,10 @@ module.exports = {
                         const pathParsed = path.parse(filePath)
                         archive.append(fs.createReadStream(filePath), { name: `${pathParsed.name}${pathParsed.ext}` })
                     })
-                    archive.finalize()
+                    archive.finalize((error) => {
+                        console.log('finalize error', error)
+                        error && reject(error)
+                    })
                 },
                 [handledExtensions.SEVENZIP]: async () => {
                     const sevenBin = require('7zip-bin')

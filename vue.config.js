@@ -10,14 +10,9 @@ module.exports = {
                 appId: 'com.zippy.app',
                 productName: 'zippy',
                 win: {
-                    icon: './public/zippy.ico',
+                    icon: 'public/zippy.ico',
                 },
             },
-        },
-    },
-    configureWebpack: {
-        node: {
-            __dirname: false,
         },
     },
 }
