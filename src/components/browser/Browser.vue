@@ -49,15 +49,15 @@
 </template>
 
 <script>
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { useStore } from 'vuex'
+import Selecto from 'selecto'
 import Sidebar from './components/Sidebar.vue'
 import FilterBar from './components/FilterBar.vue'
 import Loader from './components/Loader.vue'
 import File from './components/File.vue'
-import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { useStore } from 'vuex'
 import ContextMenu from './components/ContextMenu.vue'
 import { handledExtensions } from '@/electron/utilities/service.js'
-import Selecto from 'selecto'
 
 const keys = {
     ctrl: 'Control',
@@ -116,6 +116,35 @@ export default {
             }
             return files.value.slice(firstSelectedFileIndex, secondSelectedFileIndex + 1)
         }
+
+        function handleSelection(path, heldKey) {
+            const fileIndex = filesPaths.value.indexOf(path)
+
+            const actions = {
+                [keys.ctrl](path) {
+                    const selectedFilePathIndex = selectedFilesPaths.value.indexOf(path)
+                    const isSelected = selectedFilePathIndex >= 0
+                    if (isSelected) {
+                        const { pullAt, cloneDeep } = require('lodash')
+                        const selectedFilesCopy = cloneDeep(selectedFiles.value)
+                        pullAt(selectedFilesCopy, selectedFilePathIndex)
+                        selectedFiles.value = selectedFilesCopy
+                    } else {
+                        selectedFiles.value = [...selectedFiles.value, files[fileIndex]]
+                    }
+                },
+                [keys.shift](path) {
+                    selectedFiles.value = getSelectedFiles(path)
+                },
+                [keys.ctrlShift](path) {
+                    selectedFiles.value = [...selectedFiles.value, ...getSelectedFiles(path)]
+                },
+                default() {
+                    selectedFiles.value = [files.value[fileIndex]]
+                },
+            }
+            actions[heldKey] ? actions[heldKey](path) : actions.default(path)
+        }
         function addSelectRectangle() {
             const selecto = new Selecto({
                 container: browserElement.value,
@@ -133,77 +162,22 @@ export default {
                 selectedFiles.value = e.selected.map((el) => files.value[el.dataset.index])
             })
         }
-        async function init() {
-            store.dispatch('browser/getDrives')
-            await store.dispatch('browser/getCWD')
-            store.dispatch('browser/readDir', currentDir.value)
-        }
-        window.addEventListener('keydown', handleKeyEvent)
-        window.addEventListener('keyup', handleKeyEvent)
-        onUnmounted(() => {
-            window.removeEventListener('keydown', handleKeyEvent)
-            window.removeEventListener('keyup', handleKeyEvent)
-        })
-        onMounted(() => {
-            addSelectRectangle()
-        })
-        init()
 
-        function select(event, path) {
-            contextMenuOpen.value = false
-
-            if (path === null) {
-                return (selectedFiles.value = [])
-            }
-            if (event.type === 'contextmenu' && selectedFiles.value.length > 1) {
-                return
-            }
-            const actions = {
-                [keys.ctrl](path) {
-                    const { pullAt, cloneDeep } = require('lodash')
-                    const fileIndex = filesPaths.value.indexOf(path)
-                    const selectedFilePathIndex = selectedFilesPaths.value.indexOf(path)
-                    const isSelected = selectedFilePathIndex >= 0
-                    if (isSelected) {
-                        const selectedFilesCopy = cloneDeep(selectedFiles.value)
-                        pullAt(selectedFilesCopy, selectedFilePathIndex)
-                        selectedFiles.value = selectedFilesCopy
-                    } else {
-                        selectedFiles.value = [...selectedFiles.value, files.value[fileIndex]]
-                    }
-                },
-                [keys.shift](path) {
-                    selectedFiles.value = getSelectedFiles(path)
-                },
-                [keys.ctrlShift](path) {
-                    selectedFiles.value = [...selectedFiles.value, ...getSelectedFiles(path)]
-                },
-                default(path) {
-                    const fileIndex = filesPaths.value.indexOf(path)
-                    selectedFiles.value = [files.value[fileIndex]]
-                },
-            }
-            actions[heldKey.value] ? actions[heldKey.value](path) : actions.default(path)
-        }
-
-        return {
-            loadingDrives,
-            loading,
-            drives,
-            browserElement,
-            previousDir,
-            currentDir,
-            files,
-            filesPaths,
-            selectedFiles,
-            selectedFilesPaths,
-            previousDirExists,
-            contextMenuOpen,
-            contextMenuCoords,
+        const methods = {
             checkIfSelected(path) {
                 return selectedFilesPaths.value.includes(path)
             },
-            select,
+            select(event, path) {
+                contextMenuOpen.value = false
+                if (path === null) {
+                    return (selectedFiles.value = [])
+                }
+                if (event.type === 'contextmenu' && selectedFiles.value.length > 1) {
+                    return
+                }
+
+                handleSelection(path, heldKey.value)
+            },
             readDir(path) {
                 store.dispatch('browser/readDir', path)
             },
@@ -229,7 +203,7 @@ export default {
             },
             onBrowserClick(ev) {
                 if (!isMoving.value) {
-                    select(ev, null)
+                    selectedFiles.value = []
                 }
             },
             onMouseMove() {
@@ -244,10 +218,44 @@ export default {
             onDrop(ev) {
                 const { toArray } = require('lodash')
                 const files = toArray(ev.dataTransfer.files)
-                console.log(files)
                 const paths = files.map((file) => file.path)
                 store.dispatch('browser/move', { paths, targetDir: currentDir.value })
             },
+        }
+
+        window.addEventListener('keydown', handleKeyEvent)
+        window.addEventListener('keyup', handleKeyEvent)
+        onUnmounted(() => {
+            window.removeEventListener('keydown', handleKeyEvent)
+            window.removeEventListener('keyup', handleKeyEvent)
+        })
+        onMounted(() => {
+            addSelectRectangle()
+        })
+
+        async function init() {
+            store.dispatch('browser/getDrives')
+            await store.dispatch('browser/getCWD')
+            store.dispatch('browser/readDir', currentDir.value)
+        }
+
+        init()
+
+        return {
+            loadingDrives,
+            loading,
+            drives,
+            browserElement,
+            previousDir,
+            currentDir,
+            files,
+            filesPaths,
+            selectedFiles,
+            selectedFilesPaths,
+            previousDirExists,
+            contextMenuOpen,
+            contextMenuCoords,
+            ...methods,
         }
     },
 }

@@ -36,11 +36,14 @@ const handlers = {
 
         const moves = payload.paths.map(async (filePath) => {
             const pathParsed = path.parse(filePath)
-            console.log(filePath, pathParsed)
             const targetPath = `${payload.targetDir}/${pathParsed.name}${pathParsed.ext}`
             return await fs.move(filePath, targetPath)
         })
-        await Promise.all(moves)
+        try {
+            await Promise.all(moves)
+        } catch (err) {
+            return err
+        }
     },
 }
 
