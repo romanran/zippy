@@ -2,7 +2,7 @@
     <div class="filter-bar">
         <a class="btn-flat waves-effect waves-teal" @click="$emit('previous')"> <i class="material-icons left">history</i><span>Previous</span> </a>
         <a class="btn-flat waves-effect waves-teal" @click="filterZipClick" :class="{ teal: filterZipFiles }">
-            <i class="material-icons left">content_cut</i><span>Filter zip</span>
+            <i class="material-icons left">visibility</i><span>Show only zip files</span>
         </a>
         <div class="divider"></div>
         <div class="sort-bar z-depth-1">

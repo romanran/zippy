@@ -4,19 +4,21 @@ function getDisplayStats(stats) {
 
     return {
         size: stats.size ? prettyBytes(stats.size) : '',
-        time: format(stats.mtime, 'yyyy/MM/dd HH:mm')
+        time: format(stats.mtime, 'yyyy/MM/dd HH:mm'),
     }
 }
+const { handledExtensions } = require('./service')
+
 module.exports = {
     async getFileStats(file, currentDir) {
         if (file === '../') {
             return {
-                type: ''
+                type: '',
             }
         }
         const path = require('path')
         const fs = require('fs-extra')
-        const { clone } = require('lodash')
+        const { clone, find } = require('lodash')
         const fullPath = path.resolve(currentDir, file)
         try {
             const data = await fs.stat(fullPath)
@@ -24,24 +26,29 @@ module.exports = {
             dataStats.mtime = data.mtime.getTime()
             dataStats.atime = data.atime.getTime()
             dataStats.ctime = data.ctime.getTime()
+            const extension = path.parse(file).ext
+            let type = 'folder'
+            if (!data.isDirectory()) {
+                if (!!find(handledExtensions, (value) => value === extension)) {
+                    type = 'archive'
+                } else {
+                    type = 'file'
+                }
+            }
             return {
-                type: data.isDirectory() ? 'folder' : 'storage',
+                type,
                 name: file,
                 data: dataStats,
-                hidden: 0,
                 fullPath: fullPath,
-                display: getDisplayStats(data)
+                display: getDisplayStats(data),
             }
         } catch (err) {
             console.warn(err)
-            return {
-                type: 'lock',
-                hidden: true
-            }
+            return null
         }
     },
     getDisplayStats,
     renameDir(file) {
         console.log(file)
-    }
+    },
 }

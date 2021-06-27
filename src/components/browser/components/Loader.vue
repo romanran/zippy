@@ -13,7 +13,7 @@
                 </div>
             </div>
         </div>
-        <p class="flow-text">Opening the archive...</p>
+        <p class="flow-text">Opening directory...</p>
         <!-- TODO: progress bar -->
     </div>
 </template>
@@ -21,8 +21,8 @@
 <script>
 export default {
     props: {
-        loading: Boolean
-    }
+        loading: Boolean,
+    },
 }
 </script>
 

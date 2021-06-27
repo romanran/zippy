@@ -6,7 +6,7 @@ module.exports = {
     async handleFile(filePath) {
         const targetDir = path.parse(filePath).dir
         try {
-            await extractArchive(filePath, targetDir)
+            await extractArchive(filePath, targetDir, password)
         } catch (error) {
             saveLog('ERROR', 'extraction', error)
         }

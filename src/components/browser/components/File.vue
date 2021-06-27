@@ -1,22 +1,37 @@
 <template>
-    <li class="truncate file" v-if="!file.hidden" @click="$emit('click')" @contextmenu.prevent="$emit('right-click', $event, file)">
-        <div class="file__col icon"><i class="material-icons left" v-text="file.type" v-if="file.type"></i></div>
+    <li class="truncate file" :class="{ 'file--selected': selected }" @dblclick="$emit('doubleClick')">
+        <div class="file__col icon"><i class="material-icons left" v-text="icon" v-if="file.type"></i></div>
         <div class="file__col name">
             <span>{{ file.name }}</span>
         </div>
-        <div class="file__col size" v-if="file.display">
+        <div class="file__col size">
             <span>{{ file.display.size }}</span>
         </div>
-        <div class="file__col time" v-if="file.display">
+        <div class="file__col time">
             <span>{{ file.display.time }}</span>
         </div>
     </li>
 </template>
 <script>
+import { computed } from 'vue'
 export default {
     props: {
-        file: Object
-    }
+        file: Object,
+        selected: Boolean,
+    },
+    setup(props) {
+        const icon = computed(() => {
+            const icons = {
+                archive: 'storage',
+                folder: 'folder',
+                file: 'file',
+            }
+            return icons[props.file.type]
+        })
+        return {
+            icon,
+        }
+    },
 }
 </script>
 
@@ -25,17 +40,18 @@ $accent: teal;
 .file {
     color: #444;
     font-size: 13px;
-    cursor: pointer;
     letter-spacing: 0.5px;
     font-family: Roboto;
     display: table-row;
-    &:nth-child(2n + 1) {
-        background: fade($accent, 5%);
-    }
+
     transition: background 150ms ease;
+    user-select: none;
     &:hover {
-        background: fade(black, 10%);
+        background: rgba(black, 10%);
     }
+}
+.file--selected {
+    background: rgba($accent, 10%);
 }
 
 .file__col {

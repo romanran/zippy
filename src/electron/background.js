@@ -1,6 +1,6 @@
 'use strict'
 
-import { app, protocol, BrowserWindow } from 'electron'
+import { app, protocol, BrowserWindow, ipcRenderer } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS3_DEVTOOLS } from 'electron-devtools-installer'
 const isDevelopment = process.env.NODE_ENV !== 'production'
@@ -11,27 +11,28 @@ const { handleFile } = require('./system-handlers/app')
 const { saveLog } = require('./utilities/log')
 protocol.registerSchemesAsPrivileged([{ scheme: 'app', privileges: { secure: true, standard: true } }])
 
-const isDev = process.env.NODE_ENV === 'development'
 const unzipPath = path.parse(process.argv[1])
 if (unzipPath.base === 'dist_electron' || unzipPath.base === 'zippy') {
     async function createWindow() {
         const win = new BrowserWindow({
-            width: 800,
-            height: 600,
+            width: 1600,
+            height: 1000,
             webPreferences: {
                 nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,
                 contextIsolation: !process.env.ELECTRON_NODE_INTEGRATION,
                 preload: path.join(__dirname, 'preload.js'),
                 enableRemoteModule: true,
+                frame: false,
             },
         })
 
+        addIpcHandlers(win)
         if (process.env.WEBPACK_DEV_SERVER_URL) {
             await win.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
             if (!process.env.IS_TEST) win.webContents.openDevTools()
         } else {
             createProtocol('app')
-            win.loadURL('app://./index.html')
+            await win.loadURL('app://./index.html')
         }
     }
 
@@ -69,8 +70,6 @@ if (unzipPath.base === 'dist_electron' || unzipPath.base === 'zippy') {
             })
         }
     }
-
-    addIpcHandlers()
 } else {
     handleFile(process.argv[1])
         .then(() => {
