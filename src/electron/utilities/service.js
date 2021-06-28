@@ -6,21 +6,26 @@ const handledExtensions = {
 
 module.exports = {
     handledExtensions,
-    extractArchive(sourcePath, targetDir, password) {
+    async extractArchive(sourcePath, targetDir, password) {
         const path = require('path')
+        const fs = require('fs-extra')
+
         let zipName = path.parse(sourcePath).name
         let zipTargetDir = `${targetDir}/${zipName}`
+        await fs.ensureDir(zipTargetDir)
 
         return new Promise((resolve, reject) => {
             const extensions = {
                 [handledExtensions.ZIP]: async () => {
-                    const fs = require('fs-extra')
                     const unzipper = require('unzipper')
                     const directory = await unzipper.Open.file(sourcePath)
+                    const extractionPromises = []
                     directory.files.forEach(async (file) => {
                         const extracted = password ? await file.buffer(password) : await file.buffer()
-                        fs.writeFile(`${zipTargetDir}/${file.path}`, extracted)
+                        extractionPromises.push(await fs.writeFile(`${zipTargetDir}\\${file.path}`, extracted))
                     })
+                    await Promise.all(extractionPromises)
+                    resolve(zipTargetDir)
                 },
                 [handledExtensions.SEVENZIP]: async () => {
                     const sevenBin = require('7zip-bin')
@@ -31,7 +36,7 @@ module.exports = {
                         $bin: pathTo7zip,
                         password,
                     })
-                    resolve(zipDir)
+                    resolve(zipTargetDir)
                 },
             }
             const extension = path.parse(sourcePath).ext

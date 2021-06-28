@@ -41,7 +41,7 @@ export default {
             if (!response.handledDefault) {
                 context.commit('files', response.files)
                 context.commit('previousDirExists', path.dirname(dir) !== dir)
-                context.commit('currentDir', dir)
+                context.commit('currentDir', response.targetDir || dir)
             }
             window.api.dirWatcher({
                 dir,

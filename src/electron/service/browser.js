@@ -5,17 +5,11 @@ async function openFile(filePath) {
     const path = require('path')
     const { extractArchive } = require('../utilities/service')
 
-    const filePathParsed = path.parse(filePath)
-    const targetPath = path.resolve(process.env.TMP, `${filePathParsed.name}${filePathParsed.ext}`)
-    const pathExists = await fs.pathExists(targetPath)
-    if (pathExists) {
-        return targetPath
-    } else {
-        return await extractArchive(filePath, targetPath)
-    }
+    const targetPath = path.resolve(process.env.TMP)
+    return await extractArchive(filePath, targetPath)
 }
 
-function getDirectoryFiles(dir, openedArchive) {
+function getDirectoryFiles(dir) {
     const { getFileStats } = require('../utilities/file')
     const glob = require('glob')
 
@@ -38,29 +32,24 @@ async function handleFile(fileDir) {
     if (Object.values(handledExtensions).includes(fileExtension)) {
         try {
             const archiveDir = await openFile(fileDir)
-            const targetDirParsed = path.parse(fileDir)
-            return await readDir(archiveDir, `${targetDirParsed.name}${targetDirParsed.ext}`)
+            return await readDir(archiveDir)
         } catch (error) {
             saveLog('ERROR', 'open-file', error)
-            return error
+            return { error }
         }
     } else {
         const shell = require('electron').shell
 
         shell.openPath(fileDir)
         return {
+            targetDir: fileDir,
             handledDefault: true,
         }
     }
 }
 
-async function readDir(targetDir, openedArchive) {
+async function readDir(targetDir) {
     const fs = require('fs-extra')
-    if (openedArchive) {
-        if (targetDir.search(openedArchive) < 0) {
-            openedArchive = false
-        }
-    }
     // --If target directory is a file
     const targetStat = await fs.stat(targetDir)
     const isFile = targetStat.isFile()
@@ -71,7 +60,7 @@ async function readDir(targetDir, openedArchive) {
         let files, error
 
         try {
-            files = await getDirectoryFiles(targetDir, openedArchive)
+            files = await getDirectoryFiles(targetDir)
         } catch (dirError) {
             error = dirError
             saveLog('ERROR', 'glob-read', dirError)
