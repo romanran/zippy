@@ -39,7 +39,7 @@ module.exports = {
                 type,
                 name: file,
                 data: dataStats,
-                fullPath: fullPath,
+                fullPath: path.normalize(fullPath),
                 display: getDisplayStats(data),
             }
         } catch (err) {

@@ -35,13 +35,12 @@ export default {
             if (!dir) {
                 dir = os.homedir()
             }
-            context.commit('previousDir', context.state.currentDir)
             context.commit('loading', true)
             const response = await window.api.readDir({ dir })
             if (!response.handledDefault) {
                 context.commit('files', response.files)
-                context.commit('previousDirExists', path.dirname(dir) !== dir)
-                context.commit('currentDir', response.targetDir || dir)
+                context.commit('currentDir', response.targetDir)
+                context.commit('previousDir', response.previousDir)
             }
             window.api.dirWatcher({
                 dir,

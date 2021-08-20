@@ -1,7 +1,6 @@
 const { saveLog } = require('../utilities/log')
 
 async function openFile(filePath) {
-    const fs = require('fs-extra')
     const path = require('path')
     const { extractArchive } = require('../utilities/service')
 
@@ -50,7 +49,9 @@ async function handleFile(fileDir) {
 
 async function readDir(targetDir) {
     const fs = require('fs-extra')
-    // --If target directory is a file
+    const path = require('path')
+    targetDir = path.normalize(targetDir)
+    const previousDir = path.join(targetDir, '..')
     const targetStat = await fs.stat(targetDir)
     const isFile = targetStat.isFile()
     if (isFile) {
@@ -65,7 +66,7 @@ async function readDir(targetDir) {
             error = dirError
             saveLog('ERROR', 'glob-read', dirError)
         }
-        return { files, targetDir, error }
+        return { files, targetDir, previousDir, error }
     }
 }
 

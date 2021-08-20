@@ -15,7 +15,7 @@
             <div class="section">
                 <filter-bar @previous="readDir(previousDir)" @filter="readDir(currentDir)" />
                 <div class="divider"></div>
-                <div class="btn-flat waves-effect waves-teal parent_dir" @click="readDir('../')" v-show="previousDirExists">../</div>
+                <div class="btn-flat waves-effect waves-teal parent_dir" @click="readDir(previousDir)" v-show="previousDirExists">../</div>
                 <div class="files-wrap">
                     <ul class="files">
                         <file

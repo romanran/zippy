@@ -10,7 +10,8 @@ const handlers = {
         return storage.get(payload.name)
     },
     async readDir(event, payload) {
-        storage.set('cwd', payload.dir)
+        const path = require('path')
+        storage.set('cwd', path.normalize(payload.dir))
         const response = await readDir(payload.dir)
         return response
     },

@@ -11,7 +11,7 @@ module.exports = {
         const fs = require('fs-extra')
 
         let zipName = path.parse(sourcePath).name
-        let zipTargetDir = `${targetDir}/${zipName}`
+        let zipTargetDir = path.normalize(`${targetDir}/${zipName}`)
         await fs.ensureDir(zipTargetDir)
 
         return new Promise((resolve, reject) => {
