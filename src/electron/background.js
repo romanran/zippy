@@ -23,6 +23,7 @@ if (unzipPath.base === 'dist_electron' || unzipPath.base === 'zippy') {
                 preload: path.join(__dirname, 'preload.js'),
                 enableRemoteModule: true,
                 frame: false,
+                autoHideMenuBar: true,
             },
         })
 

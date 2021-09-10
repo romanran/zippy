@@ -1,4 +1,5 @@
 import { makeMutations } from '../utilities/store'
+import { forEach } from 'lodash'
 
 export const sortEnum = {
     NAME: 'name',
@@ -12,7 +13,7 @@ export const directionsEnum = {
 }
 
 const initialState = {
-    sortType: sortEnum[0],
+    sortType: sortEnum.NAME,
     sort: {
         [sortEnum.NAME]: { direction: 'asc' },
         [sortEnum.SIZE]: { direction: '' },
@@ -21,6 +22,7 @@ const initialState = {
 }
 export default {
     state: initialState,
+    namespaced: true,
     mutations: {
         ...makeMutations(initialState),
         sortDirection(state, payload) {
@@ -39,13 +41,13 @@ export default {
                 time: 'data.mtime',
             }
 
-            context.state.sort.forEach((sort, sortTypeKey) => {
+            forEach(context.state.sort, (sort, sortTypeKey) => {
                 if (sortTypeKey !== type) {
                     context.commit('sortDirection', { type, direction: directionsEnum.EMPTY })
                 }
             })
 
-            context.dispatch('filters/sortFiles', { sort: sortMode[type], direction })
+            // context.dispatch('sortFiles', { sort: sortMode[type], direction })
         },
     },
 }

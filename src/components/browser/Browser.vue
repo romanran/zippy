@@ -9,15 +9,15 @@
         @dragenter.prevent
         @dragover.prevent
     >
-        <div @click="closeWindow">ZAMKNIJ OKNO</div>
+        <!-- <div @click="closeWindow">ZAMKNIJ OKNO</div> -->
         <sidebar class="browser__sidebar" :drives="drives" :loading="loadingDrives" @click="readDir" />
-        <main class="browser__main" :class="{ loading: loading }" @contextmenu="onRightClick">
+        <main class="browser__main" :class="{ loading: loading }">
             <div class="section">
                 <filter-bar @previous="readDir(previousDir)" @filter="readDir(currentDir)" />
                 <div class="divider"></div>
                 <div class="btn-flat waves-effect waves-teal parent_dir" @click="readDir(previousDir)" v-show="previousDirExists">../</div>
                 <div class="files-wrap">
-                    <ul class="files">
+                    <ul class="files" @contextmenu="onRightClick">
                         <file
                             v-for="(file, fileIndex) in files"
                             :data-index="fileIndex"
@@ -202,6 +202,7 @@ export default {
                 eventFunctions[eventName] ? eventFunctions[eventName]() : null
             },
             onBrowserClick(ev) {
+                contextMenuOpen.value = false
                 if (!isMoving.value) {
                     selectedFiles.value = []
                 }
@@ -304,5 +305,10 @@ export default {
         z-index: 1;
         opacity: 1;
     }
+}
+.files-wrap {
+    max-height: calc(100vh - 105px);
+    overflow: auto;
+    -webkit-app-region: drag;
 }
 </style>

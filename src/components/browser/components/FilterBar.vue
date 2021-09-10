@@ -7,7 +7,7 @@
         <div class="divider"></div>
         <div class="sort-bar z-depth-1">
             <div class="sort-row">
-                <div class="btn-flat waves-effect waves-teal sort" v-for="(val, type) in sort" :key="type" @click="sortClick">
+                <div class="btn-flat waves-effect waves-teal sort" v-for="(val, type) in sort" :key="type" @click="sortClick(type)">
                     {{ type }}
                     <i class="material-icons right" v-if="val.direction === directionsEnum.ASCENDING">arrow_drop_up</i>
                     <i class="material-icons right" v-if="val.direction === directionsEnum.DESCENDING">arrow_drop_down</i>

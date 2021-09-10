@@ -41,7 +41,7 @@ async function handleFile(fileDir) {
 
         shell.openPath(fileDir)
         return {
-            targetDir: fileDir,
+            targetDir: path.parse(fileDir).dir,
             handledDefault: true,
         }
     }
